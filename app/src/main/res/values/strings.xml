@@ -1,6 +1,7 @@
 <resources>
   <string name="app_name">Hexagonal Games</string>
   <string name="action_settings">Settings</string>
+  <string name="action_account">My account</string>
   <string name="add_fragment_label">Add a post</string>
   <string name="homefeed_fragment_label">Home</string>
   <string name="by">By %1$s %2$s</string>

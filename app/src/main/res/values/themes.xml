@@ -2,10 +2,21 @@
   <!-- Base application theme. -->
   <style name="Base.Theme.HexagonalGames"
     parent="Theme.Material3.DayNight.NoActionBar">
-    <!-- Customize your light theme here. -->
-    <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
   </style>
 
   <style name="Theme.HexagonalGames"
     parent="Base.Theme.HexagonalGames" />
+
+  <!-- FirebaseUI -->
+  <style name="LoginTheme" parent="Theme.Material3.DayNight.NoActionBar">
+    <item name="colorPrimary">@color/purple80</item>
+    <item name="colorOnPrimary">@android:color/white</item>
+
+    <item name="colorSecondary">@color/purpleGrey80</item>
+    <item name="colorOnSecondary">@android:color/white</item>
+
+    <item name="colorTertiary">@color/pink80</item>
+    <item name="colorOnTertiary">@android:color/white</item>
+  </style>
 </resources>

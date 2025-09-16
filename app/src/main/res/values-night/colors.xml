@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <color name="icon_tint">@color/white</color>
+
+  <color name="purple40">#FF6650a4</color>
+  <color name="purpleGrey40">#FF625b71</color>
+  <color name="pink40">#FF7D5260</color>
 </resources>

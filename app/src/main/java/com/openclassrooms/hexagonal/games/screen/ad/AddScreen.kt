@@ -25,9 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
@@ -36,7 +34,7 @@ import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 @Composable
 fun AddScreen(
   modifier: Modifier = Modifier,
-  viewModel: AddViewModel = hiltViewModel(),
+  viewModel: AddViewModel,
   onBackClick: () -> Unit,
   onSaveClick: () -> Unit
 ) {
@@ -142,7 +140,6 @@ private fun CreatePost(
 }
 
 @PreviewLightDark
-@PreviewScreenSizes
 @Composable
 private fun CreatePostPreview() {
   HexagonalGamesTheme {
@@ -158,7 +155,6 @@ private fun CreatePostPreview() {
 }
 
 @PreviewLightDark
-@PreviewScreenSizes
 @Composable
 private fun CreatePostErrorPreview() {
   HexagonalGamesTheme {

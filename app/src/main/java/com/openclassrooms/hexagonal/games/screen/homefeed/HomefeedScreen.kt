@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
@@ -35,9 +36,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.imageLoader
@@ -51,13 +50,14 @@ import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 @Composable
 fun HomefeedScreen(
   modifier: Modifier = Modifier,
-  viewModel: HomefeedViewModel = hiltViewModel(),
+  viewModel: HomefeedViewModel,
   onPostClick: (Post) -> Unit = {},
   onSettingsClick: () -> Unit = {},
   onFABClick: () -> Unit = {},
+  onLoginClick: () -> Unit = {}
 ) {
   var showMenu by rememberSaveable { mutableStateOf(false) }
-  
+
   Scaffold(
     modifier = modifier,
     topBar = {
@@ -83,6 +83,16 @@ fun HomefeedScreen(
               text = {
                 Text(
                   text = stringResource(id = R.string.action_settings)
+                )
+              }
+            )
+            DropdownMenuItem(
+              onClick = {
+                onLoginClick()
+              },
+              text = {
+                Text(
+                  text = stringResource(id = R.string.action_account)
                 )
               }
             )
@@ -158,7 +168,7 @@ private fun HomefeedCell(
         text = post.title,
         style = MaterialTheme.typography.titleLarge
       )
-      if (post.photoUrl.isNullOrEmpty() == false) {
+      if (!post.photoUrl.isNullOrEmpty()) {
         AsyncImage(
           modifier = Modifier
             .padding(top = 8.dp)
@@ -174,7 +184,7 @@ private fun HomefeedCell(
           contentScale = ContentScale.Crop,
         )
       }
-      if (post.description.isNullOrEmpty() == false) {
+      if (!post.description.isNullOrEmpty()) {
         Text(
           text = post.description,
           style = MaterialTheme.typography.bodyMedium
@@ -185,7 +195,6 @@ private fun HomefeedCell(
 }
 
 @PreviewLightDark
-@PreviewScreenSizes
 @Composable
 private fun HomefeedCellPreview() {
   HexagonalGamesTheme {
@@ -208,7 +217,6 @@ private fun HomefeedCellPreview() {
 }
 
 @PreviewLightDark
-@PreviewScreenSizes
 @Composable
 private fun HomefeedCellImagePreview() {
   HexagonalGamesTheme {
