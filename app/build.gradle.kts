@@ -50,6 +50,7 @@ dependencies {
 
   //DI
   implementation(libs.hilt)
+  implementation(libs.material3)
   ksp(libs.hilt.compiler)
   implementation(libs.hilt.navigation.compose)
 

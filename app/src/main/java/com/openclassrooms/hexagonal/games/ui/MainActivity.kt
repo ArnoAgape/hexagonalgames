@@ -57,13 +57,13 @@ fun HexagonalGamesNavHost(navHostController: NavHostController) {
             val signIn = rememberSignInLauncher(navHostController)
             HomefeedScreen(
                 viewModel = hiltViewModel<HomefeedViewModel>(),
-                onPostClick = {
-                    //TODO
+                onFABClick = {
+                    navHostController.navigate(Screen.AddPost.route)
                 },
                 onSettingsClick = {
                     navHostController.navigate(Screen.Settings.route)
                 },
-                onLoginClick = { signIn() }, // ✅ appel du launcher ici
+                onLoginClick = { signIn() }
             )
         }
         composable(route = Screen.AddPost.route) {
@@ -102,7 +102,6 @@ fun rememberSignInLauncher(
         val signInIntent = AuthUI.getInstance()
             .createSignInIntentBuilder()
             .setTheme(R.style.LoginTheme)
-            .setLogo(R.mipmap.ic_launcher)
             .setAvailableProviders(providers)
             .build()
 

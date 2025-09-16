@@ -16,6 +16,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -87,58 +88,61 @@ private fun CreatePost(
   error: FormError?
 ) {
   val scrollState = rememberScrollState()
-  
-  Column(
-    modifier = modifier
-      .padding(16.dp)
-      .fillMaxSize(),
-    horizontalAlignment = Alignment.CenterHorizontally
+  Surface(
+    modifier = Modifier.fillMaxSize(),
+    color = MaterialTheme.colorScheme.background
   ) {
     Column(
       modifier = modifier
-        .fillMaxSize()
-        .weight(1f)
-        .verticalScroll(scrollState)
+        .padding(16.dp)
+        .fillMaxSize(),
+      horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      OutlinedTextField(
-        modifier = Modifier
-          .padding(top = 16.dp)
-          .fillMaxWidth(),
-        value = title,
-        isError = error is FormError.TitleError,
-        onValueChange = { onTitleChanged(it) },
-        label = { Text(stringResource(id = R.string.hint_title)) },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-        singleLine = true
-      )
-      if (error is FormError.TitleError) {
-        Text(
-          text = stringResource(id = error.messageRes),
-          color = MaterialTheme.colorScheme.error,
+      Column(
+        modifier = modifier
+          .fillMaxSize()
+          .weight(1f)
+          .verticalScroll(scrollState)
+      ) {
+        OutlinedTextField(
+          modifier = Modifier
+            .padding(top = 16.dp)
+            .fillMaxWidth(),
+          value = title,
+          isError = error is FormError.TitleError,
+          onValueChange = { onTitleChanged(it) },
+          label = { Text(stringResource(id = R.string.hint_title)) },
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+          singleLine = true
+        )
+        if (error is FormError.TitleError) {
+          Text(
+            text = stringResource(id = error.messageRes),
+            color = MaterialTheme.colorScheme.error,
+          )
+        }
+        OutlinedTextField(
+          modifier = Modifier
+            .padding(top = 16.dp)
+            .fillMaxWidth(),
+          value = description,
+          onValueChange = { onDescriptionChanged(it) },
+          label = { Text(stringResource(id = R.string.hint_description)) },
+          keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
         )
       }
-      OutlinedTextField(
-        modifier = Modifier
-          .padding(top = 16.dp)
-          .fillMaxWidth(),
-        value = description,
-        onValueChange = { onDescriptionChanged(it) },
-        label = { Text(stringResource(id = R.string.hint_description)) },
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-      )
-    }
-    Button(
-      enabled = error == null,
-      onClick = { onSaveClicked() }
-    ) {
-      Text(
-        modifier = Modifier.padding(8.dp),
-        text = stringResource(id = R.string.action_save)
-      )
+      Button(
+        enabled = error == null,
+        onClick = { onSaveClicked() }
+      ) {
+        Text(
+          modifier = Modifier.padding(8.dp),
+          text = stringResource(id = R.string.action_save)
+        )
+      }
     }
   }
 }
-
 @PreviewLightDark
 @Composable
 private fun CreatePostPreview() {
