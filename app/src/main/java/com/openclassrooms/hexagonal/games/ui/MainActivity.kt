@@ -18,11 +18,12 @@ import androidx.navigation.compose.rememberNavController
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.openclassrooms.hexagonal.games.screen.Screen
-import com.openclassrooms.hexagonal.games.screen.ad.AddScreen
-import com.openclassrooms.hexagonal.games.screen.ad.AddViewModel
+import com.openclassrooms.hexagonal.games.screen.add.AddScreen
+import com.openclassrooms.hexagonal.games.screen.add.AddViewModel
 import com.openclassrooms.hexagonal.games.screen.homefeed.HomefeedScreen
 import com.openclassrooms.hexagonal.games.screen.homefeed.HomefeedViewModel
 import com.openclassrooms.hexagonal.games.screen.settings.SettingsScreen
+import com.openclassrooms.hexagonal.games.screen.settings.SettingsViewModel
 import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -75,7 +76,8 @@ fun HexagonalGamesNavHost(navHostController: NavHostController) {
         }
         composable(route = Screen.Settings.route) {
             SettingsScreen(
-                onBackClick = { navHostController.navigateUp() }
+                onBackClick = { navHostController.navigateUp() },
+                viewModel = hiltViewModel<SettingsViewModel>(),
             )
         }
     }
@@ -108,3 +110,4 @@ fun rememberSignInLauncher(
         signInLauncher.launch(signInIntent)
     }
 }
+

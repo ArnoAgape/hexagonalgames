@@ -33,6 +33,9 @@ android {
   }
   kotlin {
     jvmToolchain(11)
+    compilerOptions {
+      freeCompilerArgs.add("-XXLanguage:+PropertyParamAnnotationDefaultTargetMode")
+    }
   }
   buildFeatures {
     compose = true

@@ -2,6 +2,8 @@
   <string name="app_name">Hexagonal Games</string>
   <string name="action_settings">Paramètres</string>
   <string name="action_account">Mon compte</string>
+  <string name="action_password">Récupérez votre mot de passe</string>
+  <string name="action_sign_in">Se connecter</string>
   <string name="homefeed_fragment_label">Home</string>
   <string name="add_fragment_label">Ajout d\'une publication</string>
   <string name="by">Par %1$s %2$s</string>
@@ -10,6 +12,7 @@
   <string name="description_button_add">Ajout</string>
   <string name="hint_title">Titre</string>
   <string name="hint_description">Description</string>
+  <string name="hint_photo">Sélectionner une photo</string>
   <string name="action_save">Sauvegarder</string>
   <string name="contentDescription_go_back">Retour</string>
   <string name="contentDescription_more">Plus</string>

@@ -1,4 +1,4 @@
-package com.openclassrooms.hexagonal.games.screen.ad
+package com.openclassrooms.hexagonal.games.screen.add
 
 import androidx.annotation.StringRes
 import com.openclassrooms.hexagonal.games.R

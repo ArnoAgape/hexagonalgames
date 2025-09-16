@@ -1,9 +1,10 @@
 package com.openclassrooms.hexagonal.games.screen.settings
 
 import android.os.Build
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -22,9 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
-import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -35,7 +34,7 @@ import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 @Composable
 fun SettingsScreen(
   modifier: Modifier = Modifier,
-  viewModel: SettingsViewModel = hiltViewModel(),
+  viewModel: SettingsViewModel,
   onBackClick: () -> Unit
 ) {
   Scaffold(
@@ -84,9 +83,8 @@ private fun Settings(
   }
   
   Column(
-    modifier = Modifier.fillMaxSize(),
-    horizontalAlignment = Alignment.CenterHorizontally,
-    verticalArrangement = Arrangement.SpaceEvenly
+    modifier = modifier.fillMaxSize(),
+    horizontalAlignment = Alignment.CenterHorizontally
   ) {
     Icon(
       modifier = Modifier.size(200.dp),
@@ -94,6 +92,7 @@ private fun Settings(
       tint = MaterialTheme.colorScheme.onSurface,
       contentDescription = stringResource(id = R.string.contentDescription_notification_icon)
     )
+    Spacer(modifier = Modifier.height(40.dp))
     Button(
       onClick = {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -101,7 +100,6 @@ private fun Settings(
             notificationsPermissionState.launchPermissionRequest()
           }
         }
-        
         onNotificationEnabledClicked()
       }
     ) {
@@ -116,7 +114,6 @@ private fun Settings(
 }
 
 @PreviewLightDark
-@PreviewScreenSizes
 @Composable
 private fun SettingsPreview() {
   HexagonalGamesTheme {
