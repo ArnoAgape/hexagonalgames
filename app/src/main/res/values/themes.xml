@@ -1,20 +1,5 @@
 <resources>
-  <style name="Theme.HexagonalGames"
-      parent="Base.Theme.HexagonalGames">
-    <!-- Transparent system bars for edge-to-edge. -->
-    <item name="android:navigationBarColor">@android:color/transparent</item>
-    <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
-  </style>
 
-  <!-- FirebaseUI -->
-  <style name="LoginTheme" parent="Theme.Material3.DayNight.NoActionBar">
-    <item name="colorPrimary">@color/purple40</item>
-    <item name="colorOnPrimary">@android:color/white</item>
-
-    <item name="colorSecondary">@color/purpleGrey40</item>
-    <item name="colorOnSecondary">@android:color/white</item>
-
-    <item name="colorTertiary">@color/pink40</item>
-    <item name="colorOnTertiary">@android:color/white</item>
-  </style>
+    <style name="Theme.HexagonalGames" parent="Base.Theme.HexagonalGames">
+    </style>
 </resources>

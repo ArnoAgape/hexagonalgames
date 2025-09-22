@@ -95,11 +95,11 @@ class AddViewModel @Inject constructor(private val postRepository: PostRepositor
    * @return A FormError.TitleError if title is empty, null otherwise.
    */
   private fun verifyPost(): FormError? {
-    return if (_post.value.title.isEmpty()) {
-      FormError.TitleError
-    } else {
-      null
+    return when {
+      _post.value.title.isEmpty() -> FormError.TitleError
+      else -> null
     }
   }
+
   
 }

@@ -1,3 +1,5 @@
+import org.gradle.kotlin.dsl.implementation
+
 plugins {
   alias(libs.plugins.androidApplication)
   alias(libs.plugins.kotlin)
@@ -43,10 +45,11 @@ android {
 }
 
 dependencies {
-  // firebase
+  // firebase & firestore
   implementation(platform(libs.firebase.bom))
   implementation(libs.firebase.analytics)
   implementation(libs.firebase.ui.auth)
+  implementation (libs.firebase.firestore)
 
   //kotlin
   implementation(platform(libs.kotlin.bom))

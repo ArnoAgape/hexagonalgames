@@ -91,7 +91,7 @@ fun HomefeedScreen(
               },
               text = {
                 Text(
-                  text = stringResource(id = R.string.action_sign_in)
+                  text = stringResource(id = R.string.action_account)
                 )
               }
             )

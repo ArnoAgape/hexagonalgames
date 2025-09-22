@@ -14,12 +14,7 @@ data class User(
   val id: String,
   
   /**
-   * User's first name.
+   * User's name.
    */
-  val firstname: String,
-  
-  /**
-   * User's last name.
-   */
-  val lastname: String
+  val displayName: String?
 ) : Serializable
