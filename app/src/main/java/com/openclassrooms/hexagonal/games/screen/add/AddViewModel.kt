@@ -83,7 +83,7 @@ class AddViewModel @Inject constructor(private val postRepository: PostRepositor
     //TODO : retrieve the current user
     postRepository.addPost(
       _post.value.copy(
-        author = User("1", "Gerry Ariella")
+        author = User("1", "Gerry Ariella", "gariella@mail.fr", null)
       )
     )
   }

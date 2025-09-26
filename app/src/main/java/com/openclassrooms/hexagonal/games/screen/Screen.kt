@@ -13,4 +13,6 @@ sealed class Screen(
   data object Settings : Screen("settings")
 
   data object Profile : Screen("profile")
+
+  data object Login : Screen("login")
 }

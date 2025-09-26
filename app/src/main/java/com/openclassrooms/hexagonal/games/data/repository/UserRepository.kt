@@ -11,7 +11,9 @@ class UserRepository(
     private fun FirebaseUser.toDomain(): User {
         return User(
             id = uid,
-            displayName = displayName
+            displayName = displayName,
+            email = email,
+            photoUrl = photoUrl?.toString()
         )
     }
 
@@ -39,15 +41,25 @@ class UserRepository(
         }
     }
 
-    fun signOut() {
-        auth.signOut()
+    fun signOut(): Result<Unit> {
+        return try {
+            auth.signOut()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     fun isUserSignedIn(): Boolean {
         return auth.currentUser != null
     }
 
-    fun deleteUser() {
-        auth.currentUser?.delete()
+    suspend fun deleteUser(): Result<Unit> {
+        return try {
+            auth.currentUser?.delete()?.await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

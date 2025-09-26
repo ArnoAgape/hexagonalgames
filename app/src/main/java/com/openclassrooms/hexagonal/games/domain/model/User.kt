@@ -8,13 +8,8 @@ import java.io.Serializable
  * serialization needs.
  */
 data class User(
-  /**
-   * Unique identifier for the User.
-   */
   val id: String,
-  
-  /**
-   * User's name.
-   */
-  val displayName: String?
+  val displayName: String?,
+  val email: String?,
+  val photoUrl: String?
 ) : Serializable

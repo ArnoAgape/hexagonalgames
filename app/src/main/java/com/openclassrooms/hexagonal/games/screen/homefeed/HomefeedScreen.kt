@@ -53,7 +53,7 @@ fun HomefeedScreen(
   onPostClick: (Post) -> Unit = {},
   onSettingsClick: () -> Unit = {},
   onFABClick: () -> Unit = {},
-  onLoginClick: () -> Unit = {}
+  onProfileClick: () -> Unit = {}
 ) {
   var showMenu by rememberSaveable { mutableStateOf(false) }
 
@@ -87,7 +87,7 @@ fun HomefeedScreen(
             )
             DropdownMenuItem(
               onClick = {
-                onLoginClick()
+                onProfileClick()
               },
               text = {
                 Text(
@@ -205,7 +205,9 @@ private fun HomefeedCellPreview() {
         timestamp = 1,
         author = User(
           id = "1",
-          displayName = "displayname"
+          displayName = "displayname",
+          email = "test@mail.fr",
+          photoUrl = null
         )
       ),
       onPostClick = {}
@@ -226,7 +228,9 @@ private fun HomefeedCellImagePreview() {
         timestamp = 1,
         author = User(
           id = "1",
-          displayName = "displayname"
+          displayName = "displayname",
+          email = "test@mail.fr",
+          photoUrl = null
         )
       ),
       onPostClick = {}

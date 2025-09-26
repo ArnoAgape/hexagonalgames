@@ -114,7 +114,6 @@ private fun CreatePost(
                     .weight(1f)
                     .verticalScroll(scrollState)
             ) {
-
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 16.dp)

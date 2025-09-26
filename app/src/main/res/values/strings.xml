@@ -7,6 +7,11 @@
   <string name="action_sign_out">Sign out</string>
   <string name="action_delete_account">Delete account</string>
   <string name="unknown_error">An unknown error occurred.</string>
+
+  <string name="user_name">Name</string>
+  <string name="user_email">Email address</string>
+  <string name="user_picture">Profile picture</string>
+
   <string name="add_fragment_label">Add a post</string>
   <string name="homefeed_fragment_label">Home</string>
   <string name="by">By %1$s</string>

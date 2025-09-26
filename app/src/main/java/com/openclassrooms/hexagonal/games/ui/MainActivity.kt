@@ -28,6 +28,8 @@ import com.openclassrooms.hexagonal.games.screen.add.AddScreen
 import com.openclassrooms.hexagonal.games.screen.add.AddViewModel
 import com.openclassrooms.hexagonal.games.screen.homefeed.HomefeedScreen
 import com.openclassrooms.hexagonal.games.screen.homefeed.HomefeedViewModel
+import com.openclassrooms.hexagonal.games.screen.profile.ProfileScreen
+import com.openclassrooms.hexagonal.games.screen.profile.ProfileViewModel
 import com.openclassrooms.hexagonal.games.screen.settings.SettingsScreen
 import com.openclassrooms.hexagonal.games.screen.settings.SettingsViewModel
 import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
@@ -55,7 +57,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-
             HexagonalGamesTheme {
                 HexagonalGamesNavHost(
                     navHostController = navController,
@@ -69,7 +70,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun HexagonalGamesNavHost(
     navHostController: NavHostController,
-    showMessage: (String) -> Unit // Ajout du paramètre pour afficher les messages
+    showMessage: (String) -> Unit
 ) {
     NavHost(
         navController = navHostController,
@@ -78,8 +79,9 @@ fun HexagonalGamesNavHost(
         composable(route = Screen.Homefeed.route) {
             val signInLauncher = rememberSignInLauncher(
                 navController = navHostController,
-                showMessage = showMessage // Passer la fonction showMessage
+                showMessage = showMessage
             )
+            val profileViewModel: ProfileViewModel = hiltViewModel()
             HomefeedScreen(
                 viewModel = hiltViewModel<HomefeedViewModel>(),
                 onFABClick = {
@@ -88,7 +90,13 @@ fun HexagonalGamesNavHost(
                 onSettingsClick = {
                     navHostController.navigate(Screen.Settings.route)
                 },
-                onLoginClick = signInLauncher // Utiliser le launcher retourné
+                onProfileClick = {
+                    if (profileViewModel.isSignedIn) {
+                        navHostController.navigate(Screen.Profile.route)
+                    } else {
+                        signInLauncher()
+                    }
+                }
             )
         }
         composable(route = Screen.AddPost.route) {
@@ -102,6 +110,18 @@ fun HexagonalGamesNavHost(
             SettingsScreen(
                 onBackClick = { navHostController.navigateUp() },
                 viewModel = hiltViewModel<SettingsViewModel>(),
+            )
+        }
+        composable(route = Screen.Profile.route) {
+            ProfileScreen(
+                onBackClick = { navHostController.navigateUp() },
+                viewModel = hiltViewModel<ProfileViewModel>(),
+            )
+        }
+        composable(route = Screen.Login.route) {
+            ProfileScreen(
+                onBackClick = { navHostController.navigateUp() },
+                viewModel = hiltViewModel<ProfileViewModel>(),
             )
         }
     }
@@ -135,8 +155,6 @@ fun rememberSignInLauncher(
             Log.d("Auth", "Connexion réussie : ${user?.email ?: "Utilisateur inconnu"}")
             showMessage("Connexion réussie !") // Message pour l'utilisateur
 
-            // Naviguer vers l'écran d'accueil et nettoyer la pile de retour
-            // pour éviter de revenir à l'écran de connexion avec le bouton "retour".
             navController.navigate(Screen.Homefeed.route) {
                 popUpTo(navController.graph.startDestinationId) { // Ou popUpTo(Screen.Homefeed.route)
                     inclusive = true
@@ -146,7 +164,6 @@ fun rememberSignInLauncher(
         } else {
             // Connexion échouée ou annulée par l'utilisateur
             if (response == null) {
-                // L'utilisateur a appuyé sur "retour" et a annulé le flux de connexion
                 Log.w("Auth", "Connexion annulée par l'utilisateur.")
                 showMessage("Connexion annulée.")
             } else {
@@ -155,9 +172,6 @@ fun rememberSignInLauncher(
                 Log.w("Auth", "Échec de la connexion. Code d'erreur : $errorCode", response.error)
                 showMessage("Échec de la connexion. Veuillez réessayer.")
             }
-            // Ici, vous pourriez choisir de ne pas naviguer, ou de naviguer vers un écran
-            // spécifique si l'utilisateur n'est pas connecté.
-            // Si vous restez sur la même page, assurez-vous que l'UI reflète l'état non connecté.
         }
     }
 
@@ -171,12 +185,9 @@ fun rememberSignInLauncher(
             .createSignInIntentBuilder()
             .setTheme(R.style.Base_Theme_HexagonalGames) // Assurez-vous que ce style est bien défini
             .setAvailableProviders(providers)
-            // .setIsSmartLockEnabled(!BuildConfig.DEBUG, true) // Optionnel: désactiver SmartLock pour le débogage
-            // .setLogo(R.drawable.my_logo) // Optionnel: ajouter un logo
             .build()
     }
 
-    // Retourne la fonction qui lancera le flux de connexion.
     return {
         signInLauncher.launch(signInIntent)
     }
