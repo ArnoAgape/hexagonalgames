@@ -22,20 +22,6 @@ class ProfileViewModel @Inject constructor(
     val isSignedIn: Boolean
         get() = userRepository.isUserSignedIn()
 
-    fun signIn(email: String, password: String) {
-        viewModelScope.launch {
-            val result = userRepository.signInWithEmail(email, password)
-            result.onSuccess { _user.value = it }
-        }
-    }
-
-    fun signUp(email: String, password: String) {
-        viewModelScope.launch {
-            val result = userRepository.signUpWithEmail(email, password)
-            result.onSuccess { _user.value = it }
-        }
-    }
-
     fun signOut() {
         val result = userRepository.signOut()
         if (result.isSuccess) {

@@ -21,26 +21,6 @@ class UserRepository(
         return auth.currentUser?.toDomain()
     }
 
-    suspend fun signInWithEmail(email: String, password: String): Result<User> {
-        return try {
-            val result = auth.signInWithEmailAndPassword(email, password).await()
-            val user = result.user?.toDomain()
-            if (user != null) Result.success(user) else Result.failure(Exception("No user found"))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun signUpWithEmail(email: String, password: String): Result<User> {
-        return try {
-            val result = auth.createUserWithEmailAndPassword(email, password).await()
-            val user = result.user?.toDomain()
-            if (user != null) Result.success(user) else Result.failure(Exception("No user created"))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
     fun signOut(): Result<Unit> {
         return try {
             auth.signOut()
