@@ -1,5 +1,6 @@
 package com.openclassrooms.hexagonal.games.screen.profile
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -7,7 +8,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -25,18 +28,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.openclassrooms.hexagonal.games.R
-import com.openclassrooms.hexagonal.games.screen.add.FormError
 import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,6 +47,9 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     onBackClick: () -> Unit
 ) {
+
+    val user by viewModel.user.collectAsStateWithLifecycle()
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -73,14 +77,12 @@ fun ProfileScreen(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            EditProfile(
+            EditProfileContent(
                 modifier = Modifier.fillMaxWidth(),
-                title = "",
+                userName = user?.displayName ?: "",
                 onTitleChanged = { },
-                description = "",
+                emailAddress = user?.email ?: "",
                 onDescriptionChanged = { },
-                onSaveClicked = { },
-                error = null,
                 onSignOutClick = {
                     viewModel.signOut()
                     onBackClick()
@@ -92,23 +94,16 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun EditProfile(
+private fun EditProfileContent(
     modifier: Modifier = Modifier,
-    title: String,
+    userName: String,
     onTitleChanged: (String) -> Unit,
-    description: String,
+    emailAddress: String,
     onDescriptionChanged: (String) -> Unit,
-    onSaveClicked: () -> Unit,
     onSignOutClick: () -> Unit,
-    onDeleteAccountClick: () -> Unit,
-    error: FormError?,
-    forceValidation: Boolean = false
+    onDeleteAccountClick: () -> Unit
 ) {
-    var titleFieldHasBeenTouched by remember { mutableStateOf(false) }
-    var wasFocused by remember { mutableStateOf(false) }
-
     val scrollState = rememberScrollState()
-    val showTitleError = (titleFieldHasBeenTouched || forceValidation) && error is FormError.TitleError
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -120,6 +115,13 @@ private fun EditProfile(
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Image(
+                painter = painterResource(R.drawable.img_profile_default),
+                contentDescription = stringResource(R.string.profile_picture),
+                modifier = Modifier
+                    .size(250.dp)
+                    .clip(CircleShape)
+            )
             Column(
                 modifier = modifier
                     .fillMaxSize()
@@ -129,63 +131,23 @@ private fun EditProfile(
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 16.dp)
-                        .fillMaxWidth()
-                        .onFocusChanged { focusState ->
-                            if (wasFocused && !focusState.isFocused) {
-                                titleFieldHasBeenTouched = true
-                            }
-                            wasFocused = focusState.isFocused
-                        },
-                    value = title,
-                    isError = showTitleError,
+                        .fillMaxWidth(),
+                    value = userName,
                     onValueChange = { onTitleChanged(it) },
                     label = { Text(stringResource(id = R.string.user_name)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     singleLine = true
                 )
-                if (showTitleError) {
-                    Text(
-                        text = stringResource(id = error.messageRes),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 16.dp)
                         .fillMaxWidth(),
-                    value = description,
+                    value = emailAddress,
                     onValueChange = { onDescriptionChanged(it) },
                     label = { Text(stringResource(id = R.string.user_email)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    singleLine = true
                 )
-                OutlinedTextField(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .fillMaxWidth(),
-                    value = description,
-                    onValueChange = { onDescriptionChanged(it) },
-                    label = { Text(stringResource(id = R.string.user_picture)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Column(
-                    modifier = modifier
-                        .padding(16.dp)
-                        .fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Button(
-                        enabled = error == null,
-                        onClick = { onSaveClicked() }
-                    ) {
-                        Text(
-                            modifier = Modifier.padding(8.dp),
-                            text = stringResource(id = R.string.action_save)
-                        )
-                    }
-                }
             }
             Button(
                 onClick = onSignOutClick,
@@ -216,13 +178,11 @@ private fun EditProfile(
 @Composable
 private fun ProfileScreenPreview() {
     HexagonalGamesTheme {
-        EditProfile(
-            title = "Aretha Franklin",
+        EditProfileContent(
+            userName = "Aretha Franklin",
             onTitleChanged = { },
-            description = "aretha.franklin@mail.com",
+            emailAddress = "aretha.franklin@mail.com",
             onDescriptionChanged = { },
-            onSaveClicked = { },
-            error = null,
             onSignOutClick = { },
             onDeleteAccountClick = { }
         )

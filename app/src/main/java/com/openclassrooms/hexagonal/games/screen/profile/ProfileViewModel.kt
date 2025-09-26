@@ -2,7 +2,6 @@ package com.openclassrooms.hexagonal.games.screen.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import coil.util.CoilUtils.result
 import com.openclassrooms.hexagonal.games.data.repository.UserRepository
 import com.openclassrooms.hexagonal.games.domain.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,7 +15,7 @@ class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository
 ) : ViewModel() {
 
-    private val _user = MutableStateFlow<User?>(userRepository.getCurrentUser())
+    private val _user = MutableStateFlow(userRepository.getCurrentUser())
     val user: StateFlow<User?> = _user
 
     val isSignedIn: Boolean

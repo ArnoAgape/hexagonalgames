@@ -118,12 +118,6 @@ fun HexagonalGamesNavHost(
                 viewModel = hiltViewModel<ProfileViewModel>(),
             )
         }
-        composable(route = Screen.Login.route) {
-            ProfileScreen(
-                onBackClick = { navHostController.navigateUp() },
-                viewModel = hiltViewModel<ProfileViewModel>(),
-            )
-        }
     }
 }
 

@@ -18,12 +18,15 @@
   <string name="notification_enable">Enable notifications</string>
   <string name="notification_disable">Disable notifications</string>
   <string name="description_button_add">Add</string>
+
   <string name="hint_title">Title</string>
   <string name="hint_description">Description</string>
   <string name="hint_photo">Select a photo</string>
+
   <string name="action_save">Save</string>
   <string name="contentDescription_go_back">Go back</string>
   <string name="contentDescription_more">More</string>
   <string name="contentDescription_notification_icon">Icone de notification</string>
+  <string name="profile_picture">Your profile picture</string>
   <string name="error_title">Title not valid</string>
 </resources>
