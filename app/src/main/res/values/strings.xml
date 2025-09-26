@@ -4,9 +4,12 @@
   <string name="action_account">My account</string>
   <string name="action_password">Recover password</string>
   <string name="action_sign_in">Sign in</string>
+  <string name="action_sign_out">Sign out</string>
+  <string name="action_delete_account">Delete account</string>
+  <string name="unknown_error">An unknown error occurred.</string>
   <string name="add_fragment_label">Add a post</string>
   <string name="homefeed_fragment_label">Home</string>
-  <string name="by">By %1$s %2$s</string>
+  <string name="by">By %1$s</string>
   <string name="notification_enable">Enable notifications</string>
   <string name="notification_disable">Disable notifications</string>
   <string name="description_button_add">Add</string>

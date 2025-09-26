@@ -4,9 +4,12 @@
   <string name="action_account">Mon compte</string>
   <string name="action_password">Récupérez votre mot de passe</string>
   <string name="action_sign_in">Se connecter</string>
+  <string name="action_sign_out">Déconnexion</string>
+  <string name="action_delete_account">Suppression du compte</string>
+  <string name="unknown_error">Une erreur inconnue s\'est produite.</string>
   <string name="homefeed_fragment_label">Home</string>
   <string name="add_fragment_label">Ajout d\'une publication</string>
-  <string name="by">Par %1$s %2$s</string>
+  <string name="by">Par %1$s</string>
   <string name="notification_enable">Activer les notifications</string>
   <string name="notification_disable">Désactiver les notifications</string>
   <string name="description_button_add">Ajout</string>

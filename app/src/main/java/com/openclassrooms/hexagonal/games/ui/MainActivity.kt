@@ -47,11 +47,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val navController = rememberNavController()
-            // Pour afficher les Snackbars, vous aurez besoin d'un SnackbarHostState
-            // et d'un Scaffold. Généralement, cela se trouve dans votre composable racine
-            // qui contient le NavHost.
-            // Pour cet exemple, nous allons le simuler en passant un lambda,
-            // mais idéalement, vous intégreriez cela avec votre Scaffold.
             val snackbarHostState = remember { SnackbarHostState() }
             val scope = rememberCoroutineScope()
             val showMessage: (String) -> Unit = { message ->
@@ -62,16 +57,6 @@ class MainActivity : ComponentActivity() {
 
 
             HexagonalGamesTheme {
-                // Vous devrez ajouter un SnackbarHost à votre UI,
-                // par exemple dans un Scaffold englobant HexagonalGamesNavHost
-                // Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { paddingValues ->
-                //    HexagonalGamesNavHost(
-                //        navHostController = navController,
-                //        showMessage = showMessage,
-                //        modifier = Modifier.padding(paddingValues)
-                //    )
-                // }
-                // Pour simplifier, et comme votre NavHost est au plus haut niveau ici :
                 HexagonalGamesNavHost(
                     navHostController = navController,
                     showMessage = showMessage

@@ -158,8 +158,7 @@ private fun HomefeedCell(
       Text(
         text = stringResource(
           id = R.string.by,
-          post.author?.firstname ?: "",
-          post.author?.lastname ?: ""
+          post.author?.displayName ?: ""
         ),
         style = MaterialTheme.typography.titleSmall
       )
@@ -206,8 +205,7 @@ private fun HomefeedCellPreview() {
         timestamp = 1,
         author = User(
           id = "1",
-          firstname = "firstname",
-          lastname = "lastname"
+          displayName = "displayname"
         )
       ),
       onPostClick = {}
@@ -228,8 +226,7 @@ private fun HomefeedCellImagePreview() {
         timestamp = 1,
         author = User(
           id = "1",
-          firstname = "firstname",
-          lastname = "lastname"
+          displayName = "displayname"
         )
       ),
       onPostClick = {}

@@ -46,4 +46,8 @@ class UserRepository(
     fun isUserSignedIn(): Boolean {
         return auth.currentUser != null
     }
+
+    fun deleteUser() {
+        auth.currentUser?.delete()
+    }
 }
