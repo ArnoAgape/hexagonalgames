@@ -83,9 +83,13 @@ fun HexagonalGamesNavHost(
             )
             val profileViewModel: ProfileViewModel = hiltViewModel()
             HomefeedScreen(
-                viewModel = hiltViewModel<HomefeedViewModel>(),
+                homeViewModel = hiltViewModel<HomefeedViewModel>(),
                 onFABClick = {
-                    navHostController.navigate(Screen.AddPost.route)
+                    if (profileViewModel.isSignedIn) {
+                        navHostController.navigate(Screen.AddPost.route)
+                    } else {
+                        signInLauncher()
+                    }
                 },
                 onSettingsClick = {
                     navHostController.navigate(Screen.Settings.route)

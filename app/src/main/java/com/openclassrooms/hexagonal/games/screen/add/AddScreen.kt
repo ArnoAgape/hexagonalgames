@@ -1,8 +1,10 @@
 package com.openclassrooms.hexagonal.games.screen.add
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -148,24 +150,10 @@ private fun CreatePost(
                     label = { Text(stringResource(id = R.string.hint_description)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                 )
-                OutlinedTextField(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .fillMaxWidth(),
-                    value = description,
-                    onValueChange = { onDescriptionChanged(it) },
-                    label = { Text(stringResource(id = R.string.hint_description)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-                )
-                OutlinedTextField(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .fillMaxWidth(),
-                    value = description,
-                    onValueChange = { onDescriptionChanged(it) },
-                    label = { Text(stringResource(id = R.string.hint_photo)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-                )
+                Spacer(Modifier.height(16.dp))
+                // ImagePicker
+                ImagePickerField()
+                Spacer(Modifier.height(16.dp))
             }
             Button(
                 enabled = error == null,

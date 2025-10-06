@@ -48,192 +48,192 @@ import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomefeedScreen(
-  modifier: Modifier = Modifier,
-  viewModel: HomefeedViewModel,
-  onPostClick: (Post) -> Unit = {},
-  onSettingsClick: () -> Unit = {},
-  onFABClick: () -> Unit = {},
-  onProfileClick: () -> Unit = {}
+    modifier: Modifier = Modifier,
+    homeViewModel: HomefeedViewModel,
+    onPostClick: (Post) -> Unit = {},
+    onSettingsClick: () -> Unit = {},
+    onFABClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {}
 ) {
-  var showMenu by rememberSaveable { mutableStateOf(false) }
+    var showMenu by rememberSaveable { mutableStateOf(false) }
 
-  Scaffold(
-    modifier = modifier,
-    topBar = {
-      TopAppBar(
-        title = {
-          Text(stringResource(id = R.string.homefeed_fragment_label))
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(stringResource(id = R.string.homefeed_fragment_label))
+                },
+                actions = {
+                    IconButton(onClick = { showMenu = !showMenu }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = stringResource(id = R.string.contentDescription_more)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            onClick = {
+                                onSettingsClick()
+                            },
+                            text = {
+                                Text(
+                                    text = stringResource(id = R.string.action_settings)
+                                )
+                            }
+                        )
+                        DropdownMenuItem(
+                            onClick = {
+                                onProfileClick()
+                            },
+                            text = {
+                                Text(
+                                    text = stringResource(id = R.string.action_account)
+                                )
+                            }
+                        )
+                    }
+                }
+            )
         },
-        actions = {
-          IconButton(onClick = { showMenu = !showMenu }) {
-            Icon(
-              imageVector = Icons.Default.MoreVert,
-              contentDescription = stringResource(id = R.string.contentDescription_more)
-            )
-          }
-          DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false }
-          ) {
-            DropdownMenuItem(
-              onClick = {
-                onSettingsClick()
-              },
-              text = {
-                Text(
-                  text = stringResource(id = R.string.action_settings)
+        floatingActionButtonPosition = FabPosition.End,
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    onFABClick()
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = stringResource(id = R.string.description_button_add)
                 )
-              }
-            )
-            DropdownMenuItem(
-              onClick = {
-                onProfileClick()
-              },
-              text = {
-                Text(
-                  text = stringResource(id = R.string.action_account)
-                )
-              }
-            )
-          }
+            }
         }
-      )
-    },
-    floatingActionButtonPosition = FabPosition.End,
-    floatingActionButton = {
-      FloatingActionButton(
-        onClick = {
-          onFABClick()
-        }
-      ) {
-        Icon(
-          imageVector = Icons.Filled.Add,
-          contentDescription = stringResource(id = R.string.description_button_add)
+    ) { contentPadding ->
+        val posts by homeViewModel.posts.collectAsStateWithLifecycle()
+
+        HomefeedList(
+            modifier = modifier.padding(contentPadding),
+            posts = posts,
+            onPostClick = onPostClick
         )
-      }
     }
-  ) { contentPadding ->
-    val posts by viewModel.posts.collectAsStateWithLifecycle()
-    
-    HomefeedList(
-      modifier = modifier.padding(contentPadding),
-      posts = posts,
-      onPostClick = onPostClick
-    )
-  }
 }
 
 @Composable
 private fun HomefeedList(
-  modifier: Modifier = Modifier,
-  posts: List<Post>,
-  onPostClick: (Post) -> Unit,
+    modifier: Modifier = Modifier,
+    posts: List<Post>,
+    onPostClick: (Post) -> Unit,
 ) {
-  LazyColumn(
-    modifier = modifier.padding(8.dp),
-    verticalArrangement = Arrangement.spacedBy(8.dp),
-  ) {
-    items(posts) { post ->
-      HomefeedCell(
-        post = post,
-        onPostClick = onPostClick
-      )
+    LazyColumn(
+        modifier = modifier.padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(posts) { post ->
+            HomefeedCell(
+                post = post,
+                onPostClick = onPostClick
+            )
+        }
     }
-  }
 }
 
 @Composable
 private fun HomefeedCell(
-  post: Post,
-  onPostClick: (Post) -> Unit,
+    post: Post,
+    onPostClick: (Post) -> Unit,
 ) {
-  ElevatedCard(
-    modifier = Modifier.fillMaxWidth(),
-    onClick = {
-      onPostClick(post)
-    }) {
-    Column(
-      modifier = Modifier.padding(8.dp),
-    ) {
-      Text(
-        text = stringResource(
-          id = R.string.by,
-          post.author?.displayName ?: ""
-        ),
-        style = MaterialTheme.typography.titleSmall
-      )
-      Text(
-        text = post.title,
-        style = MaterialTheme.typography.titleLarge
-      )
-      if (!post.photoUrl.isNullOrEmpty()) {
-        AsyncImage(
-          modifier = Modifier
-            .padding(top = 8.dp)
-            .fillMaxWidth()
-            .heightIn(max = 200.dp)
-            .aspectRatio(ratio = 16 / 9f),
-          model = post.photoUrl,
-          imageLoader = LocalContext.current.imageLoader.newBuilder()
-            .logger(DebugLogger())
-            .build(),
-          placeholder = ColorPainter(Color.DarkGray),
-          contentDescription = "image",
-          contentScale = ContentScale.Crop,
-        )
-      }
-      if (!post.description.isNullOrEmpty()) {
-        Text(
-          text = post.description,
-          style = MaterialTheme.typography.bodyMedium
-        )
-      }
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = {
+            onPostClick(post)
+        }) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+        ) {
+            Text(
+                text = stringResource(
+                    id = R.string.by,
+                    post.author?.displayName ?: ""
+                ),
+                style = MaterialTheme.typography.titleSmall
+            )
+            Text(
+                text = post.title,
+                style = MaterialTheme.typography.titleLarge
+            )
+            if (!post.photoUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    modifier = Modifier
+                      .padding(top = 8.dp)
+                      .fillMaxWidth()
+                      .heightIn(max = 200.dp)
+                      .aspectRatio(ratio = 16 / 9f),
+                    model = post.photoUrl,
+                    imageLoader = LocalContext.current.imageLoader.newBuilder()
+                        .logger(DebugLogger())
+                        .build(),
+                    placeholder = ColorPainter(Color.DarkGray),
+                    contentDescription = "image",
+                    contentScale = ContentScale.Crop,
+                )
+            }
+            if (!post.description.isNullOrEmpty()) {
+                Text(
+                    text = post.description,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
     }
-  }
 }
 
 @PreviewLightDark
 @Composable
 private fun HomefeedCellPreview() {
-  HexagonalGamesTheme {
-    HomefeedCell(
-      post = Post(
-        id = "1",
-        title = "title",
-        description = "description",
-        photoUrl = null,
-        timestamp = 1,
-        author = User(
-          id = "1",
-          displayName = "displayname",
-          email = "test@mail.fr",
-          photoUrl = null
+    HexagonalGamesTheme {
+        HomefeedCell(
+            post = Post(
+                id = "1",
+                title = "title",
+                description = "description",
+                photoUrl = null,
+                timestamp = 1,
+                author = User(
+                    id = "1",
+                    displayName = "displayname",
+                    email = "test@mail.fr",
+                    photoUrl = null
+                )
+            ),
+            onPostClick = {}
         )
-      ),
-      onPostClick = {}
-    )
-  }
+    }
 }
 
 @PreviewLightDark
 @Composable
 private fun HomefeedCellImagePreview() {
-  HexagonalGamesTheme {
-    HomefeedCell(
-      post = Post(
-        id = "1",
-        title = "title",
-        description = null,
-        photoUrl = "https://picsum.photos/id/85/1080/",
-        timestamp = 1,
-        author = User(
-          id = "1",
-          displayName = "displayname",
-          email = "test@mail.fr",
-          photoUrl = null
+    HexagonalGamesTheme {
+        HomefeedCell(
+            post = Post(
+                id = "1",
+                title = "title",
+                description = null,
+                photoUrl = "https://picsum.photos/id/85/1080/",
+                timestamp = 1,
+                author = User(
+                    id = "1",
+                    displayName = "displayname",
+                    email = "test@mail.fr",
+                    photoUrl = null
+                )
+            ),
+            onPostClick = {}
         )
-      ),
-      onPostClick = {}
-    )
-  }
+    }
 }

@@ -1,8 +1,12 @@
 package com.openclassrooms.hexagonal.games.screen.add
 
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.storage.FirebaseStorage
 import com.openclassrooms.hexagonal.games.data.repository.PostRepository
+import com.openclassrooms.hexagonal.games.data.repository.UserRepository
 import com.openclassrooms.hexagonal.games.domain.model.Post
 import com.openclassrooms.hexagonal.games.domain.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,6 +15,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
 
@@ -19,8 +24,13 @@ import javax.inject.Inject
  * It utilizes dependency injection to retrieve a PostRepository instance for interacting with post data.
  */
 @HiltViewModel
-class AddViewModel @Inject constructor(private val postRepository: PostRepository) : ViewModel() {
-  
+class AddViewModel @Inject constructor(
+  private val postRepository: PostRepository,
+  userRepository: UserRepository) : ViewModel() {
+
+  private val _user = MutableStateFlow(userRepository.getCurrentUser())
+  val user: StateFlow<User?> = _user
+
   /**
    * Internal mutable state flow representing the current post being edited.
    */
@@ -76,14 +86,15 @@ class AddViewModel @Inject constructor(private val postRepository: PostRepositor
   
   /**
    * Attempts to add the current post to the repository after setting the author.
-   *
-   * TODO: Implement logic to retrieve the current user.
    */
   fun addPost() {
-    //TODO : retrieve the current user
     postRepository.addPost(
       _post.value.copy(
-        author = User("1", "Gerry Ariella", "gariella@mail.fr", null)
+        author = User(
+          _user.value!!.id,
+          _user.value!!.displayName,
+          _user.value!!.email,
+          _user.value!!.photoUrl)
       )
     )
   }
@@ -101,5 +112,22 @@ class AddViewModel @Inject constructor(private val postRepository: PostRepositor
     }
   }
 
-  
+  suspend fun uploadImageToFirebase(uri: Uri): String? {
+    return try {
+      val fileRef = FirebaseStorage.getInstance()
+        .reference
+        .child("images/${System.currentTimeMillis()}.jpg")
+
+      Log.d("FirebaseUpload", "Début de l’upload")
+      fileRef.putFile(uri).await()
+      val downloadUrl = fileRef.downloadUrl.await()
+      Log.d("FirebaseUpload", "Upload réussi : $downloadUrl")
+      downloadUrl.toString()
+    } catch (e: Exception) {
+      Log.e("FirebaseUpload", "Erreur lors de l’upload", e)
+      e.printStackTrace()
+      null
+    }
+  }
+
 }

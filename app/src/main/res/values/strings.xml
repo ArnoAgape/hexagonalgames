@@ -21,7 +21,10 @@
 
   <string name="hint_title">Title</string>
   <string name="hint_description">Description</string>
-  <string name="hint_photo">Select a photo</string>
+  <string name="select_photo">Select a photo</string>
+  <string name="change_photo">Pick another photo</string>
+  <string name="preview_photo">Photo preview</string>
+  <string name="uploaded_photo">Photo uploaded</string>
 
   <string name="action_save">Save</string>
   <string name="contentDescription_go_back">Go back</string>
