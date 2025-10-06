@@ -1,5 +1,6 @@
 package com.openclassrooms.hexagonal.games.screen.add
 
+import android.net.Uri
 import androidx.annotation.StringRes
 import com.openclassrooms.hexagonal.games.R
 
@@ -21,6 +22,8 @@ sealed class FormEvent {
    * @property description The new description of the form.
    */
   data class DescriptionChanged(val description: String) : FormEvent()
+
+  data class PhotoChanged(val photoUrl: Uri?) : FormEvent()
   
 }
 

@@ -1,17 +1,25 @@
 package com.openclassrooms.hexagonal.games.screen.add
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,12 +36,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 
@@ -75,10 +87,11 @@ fun AddScreen(
             onTitleChanged = { viewModel.onAction(FormEvent.TitleChanged(it)) },
             description = post.description ?: "",
             onDescriptionChanged = { viewModel.onAction(FormEvent.DescriptionChanged(it)) },
+            onPhotoSelected = { viewModel.onAction(FormEvent.PhotoChanged(it)) },
             onSaveClicked = {
                 viewModel.addPost()
                 onSaveClick()
-            }
+            },
         )
     }
 }
@@ -90,6 +103,7 @@ private fun CreatePost(
     onTitleChanged: (String) -> Unit,
     description: String,
     onDescriptionChanged: (String) -> Unit,
+    onPhotoSelected: (Uri?) -> Unit,
     onSaveClicked: () -> Unit,
     error: FormError?,
     forceValidation: Boolean = false
@@ -98,7 +112,17 @@ private fun CreatePost(
     var wasFocused by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
-    val showTitleError = (titleFieldHasBeenTouched || forceValidation) && error is FormError.TitleError
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
+        onPhotoSelected(uri)
+    }
+
+    val showTitleError =
+        (titleFieldHasBeenTouched || forceValidation) && error is FormError.TitleError
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -108,11 +132,11 @@ private fun CreatePost(
             modifier = modifier
                 .padding(16.dp)
                 .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween // 👈 espace automatique haut/bas
         ) {
             Column(
-                modifier = modifier
-                    .fillMaxSize()
+                modifier = Modifier
                     .weight(1f)
                     .verticalScroll(scrollState)
             ) {
@@ -133,6 +157,7 @@ private fun CreatePost(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                     singleLine = true
                 )
+
                 if (showTitleError) {
                     Text(
                         text = stringResource(id = error.messageRes),
@@ -141,6 +166,7 @@ private fun CreatePost(
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
+
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 16.dp)
@@ -150,14 +176,49 @@ private fun CreatePost(
                     label = { Text(stringResource(id = R.string.hint_description)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                 )
+
                 Spacer(Modifier.height(16.dp))
-                // ImagePicker
-                ImagePickerField()
-                Spacer(Modifier.height(16.dp))
+
+                // 🖼️ Image picker
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    if (selectedImageUri != null) {
+                        AsyncImage(
+                            model = selectedImageUri,
+                            contentDescription = stringResource(R.string.preview_photo),
+                            modifier = Modifier
+                                .size(200.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .border(1.dp, Color.Gray, RoundedCornerShape(16.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+
+                    Button(
+                        onClick = { launcher.launch("image/*") },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Text(
+                            text = if (selectedImageUri == null)
+                                stringResource(R.string.select_photo)
+                            else
+                                stringResource(R.string.change_photo),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
             }
+
             Button(
-                enabled = error == null,
-                onClick = { onSaveClicked() }
+                onClick = onSaveClicked,
+                enabled = error == null
             ) {
                 Text(
                     modifier = Modifier.padding(8.dp),
@@ -167,6 +228,7 @@ private fun CreatePost(
         }
     }
 }
+
 
 @PreviewLightDark
 @Composable
@@ -178,7 +240,8 @@ private fun CreatePostPreview() {
             description = "description",
             onDescriptionChanged = { },
             onSaveClicked = { },
-            error = null
+            error = null,
+            onPhotoSelected = { }
         )
     }
 }
@@ -193,7 +256,8 @@ private fun CreatePostErrorPreview() {
             description = "description",
             onDescriptionChanged = { },
             onSaveClicked = { },
-            error = FormError.TitleError
+            error = FormError.TitleError,
+            onPhotoSelected = { }
         )
     }
 }

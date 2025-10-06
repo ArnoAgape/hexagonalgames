@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "799636133204",
-    "project_id": "hexagonalgames-54e75",
-    "storage_bucket": "hexagonalgames-54e75.firebasestorage.app"
+    "project_number": "492180992671",
+    "project_id": "hexagonalgames-8d2b2",
+    "storage_bucket": "hexagonalgames-8d2b2.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:799636133204:android:46e08c3edcc31a727c64c1",
+        "mobilesdk_app_id": "1:492180992671:android:b7c7f96e3d510f586da8aa",
         "android_client_info": {
           "package_name": "com.openclassrooms.hexagonal.games"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBFLEMcZtEzbKO_S8WDzSkrlD9Uc1KTZgA"
+          "current_key": "AIzaSyBTTohmjSM7ahmqG8BGha9ZejsFhENs2Es"
         }
       ],
       "services": {

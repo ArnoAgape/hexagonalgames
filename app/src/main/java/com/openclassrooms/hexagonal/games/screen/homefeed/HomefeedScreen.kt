@@ -2,8 +2,10 @@ package com.openclassrooms.hexagonal.games.screen.homefeed
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.imageLoader
@@ -166,7 +169,7 @@ private fun HomefeedCell(
                 text = post.title,
                 style = MaterialTheme.typography.titleLarge
             )
-            if (!post.photoUrl.isNullOrEmpty()) {
+            if (post.photoUrl != null) {
                 AsyncImage(
                     modifier = Modifier
                       .padding(top = 8.dp)
@@ -182,6 +185,7 @@ private fun HomefeedCell(
                     contentScale = ContentScale.Crop,
                 )
             }
+            Spacer(Modifier.height(16.dp))
             if (!post.description.isNullOrEmpty()) {
                 Text(
                     text = post.description,
@@ -224,7 +228,7 @@ private fun HomefeedCellImagePreview() {
                 id = "1",
                 title = "title",
                 description = null,
-                photoUrl = "https://picsum.photos/id/85/1080/",
+                photoUrl = "https://picsum.photos/id/85/1080/".toUri(),
                 timestamp = 1,
                 author = User(
                     id = "1",

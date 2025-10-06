@@ -4,6 +4,7 @@ import com.openclassrooms.hexagonal.games.domain.model.Post
 import com.openclassrooms.hexagonal.games.domain.model.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.core.net.toUri
 
 /**
  * This class implements the PostApi interface and provides a fake in-memory data source for Posts.
@@ -30,7 +31,7 @@ class PostFakeApi : PostApi {
         "4",
         "The Door's Game",
         null,
-        "https://picsum.photos/id/85/1080/",
+          "https://picsum.photos/id/85/1080/".toUri(),
         1451638679, // 01/01/2016
         users[2]
       ),
@@ -38,7 +39,7 @@ class PostFakeApi : PostApi {
         "1",
         "Laughing History",
         "He learned the important lesson that a picnic at the beach on a windy day is a bad idea.",
-        "",
+        null,
         1361696994, // 24/02/2013
         users[0]
       ),
@@ -54,7 +55,7 @@ class PostFakeApi : PostApi {
         "2",
         "The Invisible Window",
         null,
-        "https://picsum.photos/id/40/1080/",
+        "https://picsum.photos/id/40/1080/".toUri(),
         1210645031, // 13/05/2008
         users[1]
       ),
