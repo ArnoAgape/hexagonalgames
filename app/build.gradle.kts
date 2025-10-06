@@ -50,6 +50,8 @@ dependencies {
   implementation(libs.firebase.analytics)
   implementation(libs.firebase.ui.auth)
   implementation (libs.firebase.firestore)
+  implementation(libs.firebase.messaging)
+  implementation(libs.firebase.ui.storage)
 
   //kotlin
   implementation(platform(libs.kotlin.bom))
@@ -66,6 +68,7 @@ dependencies {
   implementation(libs.compose.ui.graphics)
   implementation(libs.compose.ui.tooling.preview)
   implementation(libs.material)
+  implementation(libs.material.icons.extended)
   implementation(libs.compose.material3)
   implementation(libs.lifecycle.runtime.compose)
   debugImplementation(libs.compose.ui.tooling)

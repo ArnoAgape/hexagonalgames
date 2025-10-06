@@ -18,6 +18,7 @@
   <string name="notification_enable">Activer les notifications</string>
   <string name="notification_disable">Désactiver les notifications</string>
   <string name="description_button_add">Ajout</string>
+
   <string name="hint_title">Titre</string>
   <string name="hint_description">Description</string>
   <string name="hint_photo">Sélectionner une photo</string>
