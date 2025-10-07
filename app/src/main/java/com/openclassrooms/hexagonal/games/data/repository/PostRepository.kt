@@ -5,8 +5,11 @@ import android.util.Log
 import com.google.firebase.storage.FirebaseStorage
 import com.openclassrooms.hexagonal.games.data.service.PostApi
 import com.openclassrooms.hexagonal.games.domain.model.Post
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -36,7 +39,9 @@ class PostRepository @Inject constructor(private val postApi: PostApi) {
     suspend fun addPost(post: Post) {
         postApi.addPost(post)
         if (post.photoUrl != null) {
-            val imageUrl = uploadImageToFirebase(post.photoUrl)
+            val imageUrl = withContext(Dispatchers.IO + SupervisorJob()) {
+                uploadImageToFirebase(post.photoUrl)
+            }
             Log.d("FirebaseUpload", "✅ Image uploadée : $imageUrl")
         }
     }
@@ -59,5 +64,4 @@ class PostRepository @Inject constructor(private val postApi: PostApi) {
             null
         }
     }
-
 }
