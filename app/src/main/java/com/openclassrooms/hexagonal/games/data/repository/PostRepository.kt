@@ -2,6 +2,8 @@ package com.openclassrooms.hexagonal.games.data.repository
 
 import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.openclassrooms.hexagonal.games.data.service.PostApi
 import com.openclassrooms.hexagonal.games.domain.model.Post
@@ -30,6 +32,8 @@ class PostRepository @Inject constructor(private val postApi: PostApi) {
      */
     val posts: Flow<List<Post>> = postApi.getPostsOrderByCreationDateDesc()
 
+    val post: Flow<Post> = postApi.getCurrentPost()
+
     /**
      * Adds a new Post to the data source using the injected PostApi.
      *
@@ -37,31 +41,44 @@ class PostRepository @Inject constructor(private val postApi: PostApi) {
      */
 
     suspend fun addPost(post: Post) {
-        postApi.addPost(post)
-        if (post.photoUrl != null) {
-            val imageUrl = withContext(Dispatchers.IO + SupervisorJob()) {
-                uploadImageToFirebase(post.photoUrl)
-            }
-            Log.d("FirebaseUpload", "✅ Image uploadée : $imageUrl")
+        // 1️⃣ Upload de l'image
+        val imageUrl = post.photoUrl?.let { uri ->
+            uploadImageToFirebase(uri)?.toUri()
         }
+
+        // 2️⃣ Construction du post complet
+        val postToSave = post.copy(photoUrl = imageUrl)
+
+        // 3️⃣ Délégation à l’API
+        postApi.addPost(postToSave)
+        Log.d("PostRepository", "✅ Post envoyé vers Firestore avec imageUrl=$imageUrl")
     }
+
 
     suspend fun uploadImageToFirebase(uri: Uri): String? {
-        return try {
-            val fileRef = FirebaseStorage.getInstance()
-                .reference
-                .child("images/${System.currentTimeMillis()}.jpg")
+        return withContext(Dispatchers.IO + SupervisorJob()) {
+            try {
+                Log.d("FirebaseUpload", "🚀 Début upload : $uri")
 
-            Log.d("FirebaseUpload", "Début de l’upload")
-            fileRef.putFile(uri).await()
-            Log.d("FirebaseUpload", "En cours d’upload")
-            val downloadUrl = fileRef.downloadUrl.await()
-            Log.d("FirebaseUpload", "Upload réussi : $downloadUrl")
-            downloadUrl.toString()
-        } catch (e: Exception) {
-            Log.e("FirebaseUpload", "Erreur lors de l’upload", e)
-            e.printStackTrace()
-            null
+                val fileRef = FirebaseStorage.getInstance()
+                    .reference
+                    .child("images/${System.currentTimeMillis()}.jpg")
+
+                Log.d("FirebaseUpload", "🟡 putFile start...")
+                fileRef.putFile(uri).await()
+                Log.d("FirebaseUpload", "✅ putFile terminé")
+
+                val downloadUrl = fileRef.downloadUrl.await()
+                Log.d("FirebaseUpload", "✅ Download URL : $downloadUrl")
+
+                downloadUrl.toString()
+            } catch (e: Exception) {
+                Log.e("FirebaseUpload", "❌ Erreur upload Firebase", e)
+                null
+            }
         }
     }
+
+    fun getPostById(postId: String): Flow<Post?> = postApi.getPostById(postId)
+
 }

@@ -24,8 +24,10 @@ import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.openclassrooms.hexagonal.games.screen.Screen
-import com.openclassrooms.hexagonal.games.screen.add.AddScreen
-import com.openclassrooms.hexagonal.games.screen.add.AddViewModel
+import com.openclassrooms.hexagonal.games.screen.addPost.AddScreen
+import com.openclassrooms.hexagonal.games.screen.addPost.AddPostViewModel
+import com.openclassrooms.hexagonal.games.screen.detailPost.DetailScreen
+import com.openclassrooms.hexagonal.games.screen.detailPost.DetailPostViewModel
 import com.openclassrooms.hexagonal.games.screen.homefeed.HomefeedScreen
 import com.openclassrooms.hexagonal.games.screen.homefeed.HomefeedViewModel
 import com.openclassrooms.hexagonal.games.screen.profile.ProfileScreen
@@ -100,12 +102,15 @@ fun HexagonalGamesNavHost(
                     } else {
                         signInLauncher()
                     }
+                },
+                onPostClick = {
+                    navHostController.navigate(Screen.DetailPost.route)
                 }
             )
         }
         composable(route = Screen.AddPost.route) {
             AddScreen(
-                viewModel = hiltViewModel<AddViewModel>(),
+                viewModel = hiltViewModel<AddPostViewModel>(),
                 onBackClick = { navHostController.navigateUp() },
                 onSaveClick = { navHostController.navigateUp() }
             )
@@ -120,6 +125,12 @@ fun HexagonalGamesNavHost(
             ProfileScreen(
                 onBackClick = { navHostController.navigateUp() },
                 viewModel = hiltViewModel<ProfileViewModel>(),
+            )
+        }
+        composable(route = Screen.DetailPost.route) {
+            DetailScreen(
+                onBackClick = { navHostController.navigateUp() },
+                viewModel = hiltViewModel<DetailPostViewModel>(),
             )
         }
     }

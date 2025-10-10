@@ -77,7 +77,7 @@ fun ProfileScreen(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            EditProfileContent(
+            ProfileContent(
                 modifier = Modifier.fillMaxWidth(),
                 userName = user?.displayName ?: "",
                 onTitleChanged = { },
@@ -94,7 +94,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun EditProfileContent(
+private fun ProfileContent(
     modifier: Modifier = Modifier,
     userName: String,
     onTitleChanged: (String) -> Unit,
@@ -128,6 +128,7 @@ private fun EditProfileContent(
                     .weight(1f)
                     .verticalScroll(scrollState)
             ) {
+                Text(userName)
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 16.dp)
@@ -178,7 +179,7 @@ private fun EditProfileContent(
 @Composable
 private fun ProfileScreenPreview() {
     HexagonalGamesTheme {
-        EditProfileContent(
+        ProfileContent(
             userName = "Aretha Franklin",
             onTitleChanged = { },
             emailAddress = "aretha.franklin@mail.com",

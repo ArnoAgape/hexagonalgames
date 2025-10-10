@@ -1,4 +1,4 @@
-package com.openclassrooms.hexagonal.games.screen.add
+package com.openclassrooms.hexagonal.games.screen.addPost
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -24,7 +24,7 @@ import kotlin.coroutines.cancellation.CancellationException
  * It utilizes dependency injection to retrieve a PostRepository instance for interacting with post data.
  */
 @HiltViewModel
-class AddViewModel @Inject constructor(
+class AddPostViewModel @Inject constructor(
     private val postRepository: PostRepository,
     userRepository: UserRepository
 ) : ViewModel() {
@@ -104,26 +104,30 @@ class AddViewModel @Inject constructor(
      */
     fun addPost() {
         viewModelScope.launch {
-            val currentPost = post.value.copy(
-                id = UUID.randomUUID().toString(),
-                timestamp = System.currentTimeMillis(),
-                author = user.value
-            )
-
-            _uiState.value = AddPostUiState.Loading
-
             try {
+                _uiState.value = AddPostUiState.Loading
+
+                val currentPost = post.value.copy(
+                    id = UUID.randomUUID().toString(),
+                    timestamp = System.currentTimeMillis(),
+                    author = user.value
+                )
+
                 postRepository.addPost(currentPost)
+
                 _uiState.value = AddPostUiState.Success
                 _error.value = null
+
+                Log.d("AddPostViewModel", "Post added successfully: $currentPost")
+
             } catch (e: Exception) {
                 if (e !is CancellationException) {
+                    Log.e("AddPostViewModel", "Error while adding the post", e)
                     _uiState.value = AddPostUiState.Error(e.message)
                 }
             }
         }
     }
-
 
     /**
      * Verifies mandatory fields of the post

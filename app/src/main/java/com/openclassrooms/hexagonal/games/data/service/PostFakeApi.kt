@@ -5,6 +5,7 @@ import com.openclassrooms.hexagonal.games.domain.model.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import androidx.core.net.toUri
+import kotlinx.coroutines.flow.map
 
 /**
  * This class implements the PostApi interface and provides a fake in-memory data source for Posts.
@@ -18,7 +19,7 @@ class PostFakeApi : PostApi {
   )
   
   private val posts = MutableStateFlow(
-    mutableListOf(
+    listOf(
       Post(
         "5",
         "The Secret of the Flowers",
@@ -64,9 +65,15 @@ class PostFakeApi : PostApi {
   
   override fun getPostsOrderByCreationDateDesc(): Flow<List<Post>> =
     posts
-  
+
   override fun addPost(post: Post) {
-    posts.value.add(0, post)
+    posts.value = listOf(post) + posts.value
   }
-  
+
+  override fun getCurrentPost(): Flow<Post> =
+    posts.map { it.maxByOrNull { post -> post.timestamp } ?: it.first() }
+
+  override fun getPostById(postId: String): Flow<Post?> =
+    posts.map { it.find { post -> post.id == postId } }
+
 }

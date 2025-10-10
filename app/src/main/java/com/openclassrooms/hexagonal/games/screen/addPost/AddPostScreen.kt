@@ -1,4 +1,4 @@
-package com.openclassrooms.hexagonal.games.screen.add
+package com.openclassrooms.hexagonal.games.screen.addPost
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -32,6 +32,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,7 +56,7 @@ import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 @Composable
 fun AddScreen(
     modifier: Modifier = Modifier,
-    viewModel: AddViewModel,
+    viewModel: AddPostViewModel,
     onBackClick: () -> Unit,
     onSaveClick: () -> Unit
 ) {
@@ -100,7 +101,9 @@ fun AddScreen(
             }
 
             is AddPostUiState.Success -> {
-                onSaveClick()
+                LaunchedEffect(uiState) {
+                    onSaveClick()
+                }
             }
 
             is AddPostUiState.Error -> {
@@ -123,7 +126,6 @@ fun AddScreen(
                     onPhotoSelected = { viewModel.onAction(FormEvent.PhotoChanged(it)) },
                     onSaveClicked = {
                         viewModel.onSaveClicked()
-                        onSaveClick()
                     },
                     isPostValid = isPostValid,
                     uiState = uiState
