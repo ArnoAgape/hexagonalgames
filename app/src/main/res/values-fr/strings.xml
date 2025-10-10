@@ -7,6 +7,8 @@
   <string name="action_sign_out">Déconnexion</string>
   <string name="action_delete_account">Suppression du compte</string>
   <string name="unknown_error">Une erreur inconnue s\'est produite.</string>
+  <string name="error">Erreur</string>
+  <string name="loading">Chargement…</string>
 
   <string name="user_name">Nom</string>
   <string name="user_email">E-mail</string>

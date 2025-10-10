@@ -14,5 +14,5 @@ sealed class Screen(
 
   data object Profile : Screen("profile")
 
-  data object DetailPost : Screen("detailPost")
+  data object DetailPost : Screen("detail/{postId}")
 }

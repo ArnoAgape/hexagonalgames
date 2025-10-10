@@ -1,18 +1,14 @@
 package com.openclassrooms.hexagonal.games.screen.detailPost
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -31,18 +27,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.util.DebugLogger
 import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.domain.model.Post
 import com.openclassrooms.hexagonal.games.domain.model.User
@@ -55,17 +46,32 @@ fun DetailScreen(
     viewModel: DetailPostViewModel,
     onBackClick: () -> Unit
 ) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
                 title = {
-                    Text(stringResource(id = R.string.action_account))
+                    when (state) {
+                        is DetailUiState.Success -> {
+                            val post = (state as DetailUiState.Success).post
+                            Text(
+                                text = post.title,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        is DetailUiState.Loading -> {
+                            Text(stringResource(R.string.loading))
+                        }
+                        is DetailUiState.Error -> {
+                            Text(stringResource(R.string.error))
+                        }
+                    }
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        onBackClick()
-                    }) {
+                    IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(id = R.string.contentDescription_go_back)
@@ -73,10 +79,8 @@ fun DetailScreen(
                     }
                 }
             )
-        },
+        }
     ) { contentPadding ->
-        val state by viewModel.uiState.collectAsStateWithLifecycle()
-
         when (state) {
             is DetailUiState.Loading -> {
                 Box(
@@ -91,35 +95,25 @@ fun DetailScreen(
 
             is DetailUiState.Error -> {
                 val message = (state as DetailUiState.Error).message
-                Text("Erreur : $message", color = MaterialTheme.colorScheme.error)
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(contentPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Error: $message",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
             }
 
             is DetailUiState.Success -> {
                 val post = (state as DetailUiState.Success).post
-
-                Column(Modifier.padding(16.dp)) {
-                    post.author?.displayName?.let {
-                        Text(
-                            it,
-                            style = MaterialTheme.typography.headlineSmall
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Text(post.title, style = MaterialTheme.typography.headlineSmall)
-                    Spacer(Modifier.height(8.dp))
-                    post.photoUrl?.let { url ->
-                        AsyncImage(
-                            model = url,
-                            contentDescription = post.title,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                        )
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Text(post.description ?: "", style = MaterialTheme.typography.bodyMedium)
-                }
+                PostContent(
+                    modifier = Modifier.padding(contentPadding),
+                    post = post
+                )
             }
         }
     }
@@ -133,57 +127,54 @@ private fun PostContent(
     val scrollState = rememberScrollState()
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = modifier
-                .padding(16.dp)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .verticalScroll(scrollState)
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.Start
         ) {
-            Image(
-                painter = painterResource(R.drawable.img_profile_default),
-                contentDescription = stringResource(R.string.profile_picture),
-                modifier = Modifier
-                    .size(250.dp)
-                    .clip(CircleShape)
+            // Author
+            post.author?.displayName?.let {
+                Text(
+                    text = stringResource(R.string.by, it),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+
+            // Title
+            Text(
+                text = post.title,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground
             )
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .weight(1f)
-                    .verticalScroll(scrollState)
-            ) {
-                Text( // author
-                    modifier = Modifier.padding(8.dp),
-                    text = stringResource(id = R.string.action_sign_out)
+            Spacer(Modifier.height(8.dp))
+
+            // Description
+            if (!post.description.isNullOrBlank()) {
+                Text(
+                    text = post.description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Text( // title
-                    modifier = Modifier.padding(8.dp),
-                    text = stringResource(id = R.string.action_sign_out)
+                Spacer(Modifier.height(16.dp))
+            }
+
+            // Photo
+            post.photoUrl?.let { url ->
+                AsyncImage(
+                    model = url,
+                    contentDescription = post.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 180.dp, max = 300.dp)
+                        .clip(RoundedCornerShape(12.dp))
                 )
-                Text( // description
-                    modifier = Modifier.padding(8.dp),
-                    text = stringResource(id = R.string.action_sign_out)
-                )
-                if (post.photoUrl != null) {
-                    AsyncImage(
-                        // photo
-                        modifier = Modifier
-                            .padding(top = 8.dp)
-                            .fillMaxWidth()
-                            .heightIn(max = 200.dp)
-                            .aspectRatio(ratio = 16 / 9f),
-                        model = post.photoUrl,
-                        imageLoader = LocalContext.current.imageLoader.newBuilder()
-                            .logger(DebugLogger())
-                            .build(),
-                        placeholder = ColorPainter(Color.DarkGray),
-                        contentDescription = "image",
-                        contentScale = ContentScale.Crop,
-                    )
-                }
             }
         }
     }

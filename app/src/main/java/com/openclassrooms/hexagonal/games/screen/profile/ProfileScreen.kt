@@ -128,7 +128,6 @@ private fun ProfileContent(
                     .weight(1f)
                     .verticalScroll(scrollState)
             ) {
-                Text(userName)
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 16.dp)

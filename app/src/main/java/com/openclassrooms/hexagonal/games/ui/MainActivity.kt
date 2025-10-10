@@ -103,8 +103,8 @@ fun HexagonalGamesNavHost(
                         signInLauncher()
                     }
                 },
-                onPostClick = {
-                    navHostController.navigate(Screen.DetailPost.route)
+                onPostClick = { post ->
+                    navHostController.navigate("detail/${post.id}")
                 }
             )
         }
@@ -117,20 +117,20 @@ fun HexagonalGamesNavHost(
         }
         composable(route = Screen.Settings.route) {
             SettingsScreen(
-                onBackClick = { navHostController.navigateUp() },
                 viewModel = hiltViewModel<SettingsViewModel>(),
+                onBackClick = { navHostController.navigateUp() }
             )
         }
         composable(route = Screen.Profile.route) {
             ProfileScreen(
-                onBackClick = { navHostController.navigateUp() },
                 viewModel = hiltViewModel<ProfileViewModel>(),
+                onBackClick = { navHostController.navigateUp() }
             )
         }
         composable(route = Screen.DetailPost.route) {
             DetailScreen(
-                onBackClick = { navHostController.navigateUp() },
                 viewModel = hiltViewModel<DetailPostViewModel>(),
+                onBackClick = { navHostController.navigateUp() }
             )
         }
     }

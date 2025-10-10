@@ -7,6 +7,8 @@
   <string name="action_sign_out">Sign out</string>
   <string name="action_delete_account">Delete account</string>
   <string name="unknown_error">An unknown error occurred.</string>
+  <string name="error">Error</string>
+  <string name="loading">Loading…</string>
 
   <string name="user_name">Name</string>
   <string name="user_email">Email address</string>
