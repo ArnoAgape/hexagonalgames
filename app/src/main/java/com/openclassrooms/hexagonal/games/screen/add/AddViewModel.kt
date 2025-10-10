@@ -1,5 +1,6 @@
 package com.openclassrooms.hexagonal.games.screen.add
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.openclassrooms.hexagonal.games.data.repository.PostRepository
@@ -10,11 +11,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * This ViewModel manages data and interactions related to adding new posts in the AddScreen.
@@ -28,6 +31,12 @@ class AddViewModel @Inject constructor(
 
     private val _user = MutableStateFlow(userRepository.getCurrentUser())
     val user: StateFlow<User?> = _user
+
+    private val _error = MutableStateFlow<FormError?>(null)
+    val error = _error.asStateFlow()
+
+    private val _uiState = MutableStateFlow<AddPostUiState>(AddPostUiState.Idle)
+    val uiState = _uiState.asStateFlow()
 
     /**
      * Internal mutable state flow representing the current post being edited.
@@ -53,12 +62,14 @@ class AddViewModel @Inject constructor(
     /**
      * StateFlow derived from the post that emits a FormError if the title is empty, null otherwise.
      */
-    val error = post.map {
-        verifyPost()
+    val isPostValid = post.map { currentPost ->
+        currentPost.title.isNotBlank() && (
+                !currentPost.description.isNullOrBlank() || currentPost.photoUrl != null
+                )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
-        initialValue = null,
+        initialValue = false,
     )
 
     /**
@@ -98,9 +109,21 @@ class AddViewModel @Inject constructor(
                 timestamp = System.currentTimeMillis(),
                 author = user.value
             )
-            postRepository.addPost(currentPost)
+
+            _uiState.value = AddPostUiState.Loading
+
+            try {
+                postRepository.addPost(currentPost)
+                _uiState.value = AddPostUiState.Success
+                _error.value = null
+            } catch (e: Exception) {
+                if (e !is CancellationException) {
+                    _uiState.value = AddPostUiState.Error(e.message)
+                }
+            }
         }
     }
+
 
     /**
      * Verifies mandatory fields of the post
@@ -108,10 +131,24 @@ class AddViewModel @Inject constructor(
      *
      * @return A FormError.TitleError if title is empty, null otherwise.
      */
-    private fun verifyPost(): FormError? {
+    private fun verifyPost(post: Post = _post.value): FormError? {
         return when {
-            _post.value.title.isEmpty() -> FormError.TitleError
+            post.title.isBlank() -> FormError.TitleError
+            post.description.isNullOrBlank() && post.photoUrl == null -> FormError.DescriptionError
             else -> null
+        }
+    }
+
+
+    fun onSaveClicked() {
+        Log.d("AddPostViewModel", ">>> Post before validation: ${_post.value}")
+        val validationError = verifyPost()
+        if (validationError != null) {
+            Log.d("AddPostViewModel", ">>> Validation failed: $validationError")
+            _error.value = validationError
+        } else {
+            Log.d("AddPostViewModel", ">>> Validation OK, addPost() called")
+            addPost()
         }
     }
 

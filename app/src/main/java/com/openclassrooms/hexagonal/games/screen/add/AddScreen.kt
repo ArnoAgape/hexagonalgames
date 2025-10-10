@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -79,20 +81,55 @@ fun AddScreen(
     ) { contentPadding ->
         val post by viewModel.post.collectAsStateWithLifecycle()
         val error by viewModel.error.collectAsStateWithLifecycle()
+        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+        val isPostValid by viewModel.isPostValid.collectAsStateWithLifecycle()
 
-        CreatePost(
-            modifier = Modifier.padding(contentPadding),
-            error = error,
-            title = post.title,
-            onTitleChanged = { viewModel.onAction(FormEvent.TitleChanged(it)) },
-            description = post.description ?: "",
-            onDescriptionChanged = { viewModel.onAction(FormEvent.DescriptionChanged(it)) },
-            onPhotoSelected = { viewModel.onAction(FormEvent.PhotoChanged(it)) },
-            onSaveClicked = {
-                viewModel.addPost()
+        when (uiState) {
+            is AddPostUiState.Loading -> {
+                // Loading
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                    Text(
+                        text = stringResource(R.string.publishing),
+                        modifier = Modifier.padding(top = 80.dp)
+                    )
+                }
+            }
+
+            is AddPostUiState.Success -> {
                 onSaveClick()
-            },
-        )
+            }
+
+            is AddPostUiState.Error -> {
+                val message = (uiState as AddPostUiState.Error).message
+                    ?: stringResource(R.string.unknown_error)
+                Text(
+                    text = "Error : $message",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            AddPostUiState.Idle -> {
+                CreatePost(
+                    modifier = Modifier.padding(contentPadding),
+                    error = error,
+                    title = post.title,
+                    onTitleChanged = { viewModel.onAction(FormEvent.TitleChanged(it)) },
+                    description = post.description ?: "",
+                    onDescriptionChanged = { viewModel.onAction(FormEvent.DescriptionChanged(it)) },
+                    onPhotoSelected = { viewModel.onAction(FormEvent.PhotoChanged(it)) },
+                    onSaveClicked = {
+                        viewModel.onSaveClicked()
+                        onSaveClick()
+                    },
+                    isPostValid = isPostValid,
+                    uiState = uiState
+                )
+            }
+        }
     }
 }
 
@@ -106,10 +143,15 @@ private fun CreatePost(
     onPhotoSelected: (Uri?) -> Unit,
     onSaveClicked: () -> Unit,
     error: FormError?,
-    forceValidation: Boolean = false
+    forceValidation: Boolean = false,
+    isPostValid: Boolean,
+    uiState: AddPostUiState
 ) {
     var titleFieldHasBeenTouched by remember { mutableStateOf(false) }
     var wasFocused by remember { mutableStateOf(false) }
+
+    var descriptionFieldTouched by remember { mutableStateOf(false) }
+    var descriptionFocused by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
@@ -123,6 +165,9 @@ private fun CreatePost(
 
     val showTitleError =
         (titleFieldHasBeenTouched || forceValidation) && error is FormError.TitleError
+    val showDescriptionError =
+        (descriptionFieldTouched || forceValidation) && error is FormError.DescriptionError
+    val showPhotoError = (forceValidation) && error is FormError.PhotoError
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -133,7 +178,7 @@ private fun CreatePost(
                 .padding(16.dp)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween // 👈 espace automatique haut/bas
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column(
                 modifier = Modifier
@@ -170,12 +215,28 @@ private fun CreatePost(
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 16.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .onFocusChanged { focusState ->
+                            if (descriptionFocused && !focusState.isFocused) {
+                                descriptionFieldTouched = true
+                            }
+                            descriptionFocused = focusState.isFocused
+                        },
                     value = description,
+                    isError = showDescriptionError,
                     onValueChange = { onDescriptionChanged(it) },
                     label = { Text(stringResource(id = R.string.hint_description)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                 )
+
+                if (showDescriptionError) {
+                    Text(
+                        text = stringResource(id = error.messageRes),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
                 Spacer(Modifier.height(16.dp))
 
@@ -213,22 +274,34 @@ private fun CreatePost(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
+                    if (showPhotoError) {
+                        Text(
+                            text = stringResource(id = error.messageRes),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
 
             Button(
                 onClick = onSaveClicked,
-                enabled = error == null
+                enabled = isPostValid && uiState !is AddPostUiState.Loading
             ) {
-                Text(
-                    modifier = Modifier.padding(8.dp),
-                    text = stringResource(id = R.string.action_save)
-                )
+                if (uiState is AddPostUiState.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text(text = stringResource(id = R.string.action_save))
+                }
             }
         }
     }
 }
-
 
 @PreviewLightDark
 @Composable
@@ -241,7 +314,9 @@ private fun CreatePostPreview() {
             onDescriptionChanged = { },
             onSaveClicked = { },
             error = null,
-            onPhotoSelected = { }
+            onPhotoSelected = { },
+            isPostValid = true,
+            uiState = AddPostUiState.Idle
         )
     }
 }
@@ -257,7 +332,9 @@ private fun CreatePostErrorPreview() {
             onDescriptionChanged = { },
             onSaveClicked = { },
             error = FormError.TitleError,
-            onPhotoSelected = { }
+            onPhotoSelected = { },
+            isPostValid = true,
+            uiState = AddPostUiState.Idle
         )
     }
 }

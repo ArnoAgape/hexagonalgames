@@ -32,4 +32,7 @@
   <string name="contentDescription_notification_icon">Icone de notification</string>
   <string name="profile_picture">Your profile picture</string>
   <string name="error_title">Title not valid</string>
+  <string name="error_description">Invalid description</string>
+  <string name="error_photo">Invalid photo</string>
+  <string name="publishing">Publishing…</string>
 </resources>
