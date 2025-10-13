@@ -1,20 +1,29 @@
 package com.openclassrooms.hexagonal.games.screen.detailPost
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -35,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.openclassrooms.hexagonal.games.R
+import com.openclassrooms.hexagonal.games.domain.model.Comment
 import com.openclassrooms.hexagonal.games.domain.model.Post
 import com.openclassrooms.hexagonal.games.domain.model.User
 import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
@@ -44,9 +55,11 @@ import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 fun DetailScreen(
     modifier: Modifier = Modifier,
     viewModel: DetailPostViewModel,
+    onFABClick: () -> Unit = {},
     onBackClick: () -> Unit
 ) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val state by viewModel.uiPostState.collectAsStateWithLifecycle()
+    val commentState by viewModel.uiCommentState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -54,18 +67,20 @@ fun DetailScreen(
             TopAppBar(
                 title = {
                     when (state) {
-                        is DetailUiState.Success -> {
-                            val post = (state as DetailUiState.Success).post
+                        is DetailPostUiState.Success -> {
+                            val post = (state as DetailPostUiState.Success).post
                             Text(
                                 text = post.title,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
-                        is DetailUiState.Loading -> {
+
+                        is DetailPostUiState.Loading -> {
                             Text(stringResource(R.string.loading))
                         }
-                        is DetailUiState.Error -> {
+
+                        is DetailPostUiState.Error -> {
                             Text(stringResource(R.string.error))
                         }
                     }
@@ -79,10 +94,23 @@ fun DetailScreen(
                     }
                 }
             )
+        },
+        floatingActionButtonPosition = FabPosition.End,
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = {
+                    onFABClick()
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = stringResource(id = R.string.description_button_add)
+                )
+            }
         }
     ) { contentPadding ->
         when (state) {
-            is DetailUiState.Loading -> {
+            is DetailPostUiState.Loading -> {
                 Box(
                     Modifier
                         .fillMaxSize()
@@ -93,8 +121,8 @@ fun DetailScreen(
                 }
             }
 
-            is DetailUiState.Error -> {
-                val message = (state as DetailUiState.Error).message
+            is DetailPostUiState.Error -> {
+                val message = (state as DetailPostUiState.Error).message
                 Box(
                     Modifier
                         .fillMaxSize()
@@ -108,8 +136,8 @@ fun DetailScreen(
                 }
             }
 
-            is DetailUiState.Success -> {
-                val post = (state as DetailUiState.Success).post
+            is DetailPostUiState.Success -> {
+                val post = (state as DetailPostUiState.Success).post
                 PostContent(
                     modifier = Modifier.padding(contentPadding),
                     post = post
@@ -180,6 +208,41 @@ private fun PostContent(
     }
 }
 
+@Composable
+private fun CommentContent(
+    modifier: Modifier = Modifier,
+    comment: Comment
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Row(
+            modifier = modifier
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                painter = painterResource(R.drawable.img_profile_default),
+                contentDescription = stringResource(R.string.profile_picture),
+                modifier = Modifier
+                    .size(50.dp)
+                    .clip(CircleShape)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+
+            // Comment section
+            Row {
+                Text(
+                    text = comment.content,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @PreviewLightDark
 @Composable
@@ -192,6 +255,28 @@ private fun PostScreenPreview() {
                 title = "Songs",
                 description = "Classical music from this talented singer",
                 photoUrl = null,
+                timestamp = 1,
+                author = User(
+                    id = "1",
+                    displayName = "Aretha Franklin",
+                    email = "test@mail.fr",
+                    photoUrl = null
+                )
+            ),
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@PreviewLightDark
+@Composable
+private fun CommentScreenPreview() {
+    HexagonalGamesTheme {
+        CommentContent(
+            modifier = Modifier.fillMaxWidth(),
+            comment = Comment(
+                id = "1",
+                content = "I love that song",
                 timestamp = 1,
                 author = User(
                     id = "1",

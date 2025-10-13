@@ -24,7 +24,9 @@ import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.openclassrooms.hexagonal.games.screen.Screen
-import com.openclassrooms.hexagonal.games.screen.addPost.AddScreen
+import com.openclassrooms.hexagonal.games.screen.addComment.AddCommentScreen
+import com.openclassrooms.hexagonal.games.screen.addComment.AddCommentViewModel
+import com.openclassrooms.hexagonal.games.screen.addPost.AddPostScreen
 import com.openclassrooms.hexagonal.games.screen.addPost.AddPostViewModel
 import com.openclassrooms.hexagonal.games.screen.detailPost.DetailScreen
 import com.openclassrooms.hexagonal.games.screen.detailPost.DetailPostViewModel
@@ -78,6 +80,8 @@ fun HexagonalGamesNavHost(
         navController = navHostController,
         startDestination = Screen.Homefeed.route
     ) {
+
+
         composable(route = Screen.Homefeed.route) {
             val signInLauncher = rememberSignInLauncher(
                 navController = navHostController,
@@ -109,7 +113,7 @@ fun HexagonalGamesNavHost(
             )
         }
         composable(route = Screen.AddPost.route) {
-            AddScreen(
+            AddPostScreen(
                 viewModel = hiltViewModel<AddPostViewModel>(),
                 onBackClick = { navHostController.navigateUp() },
                 onSaveClick = { navHostController.navigateUp() }
@@ -128,9 +132,28 @@ fun HexagonalGamesNavHost(
             )
         }
         composable(route = Screen.DetailPost.route) {
+            val signInLauncher = rememberSignInLauncher(
+                navController = navHostController,
+                showMessage = showMessage
+            )
+            val profileViewModel: ProfileViewModel = hiltViewModel()
             DetailScreen(
                 viewModel = hiltViewModel<DetailPostViewModel>(),
-                onBackClick = { navHostController.navigateUp() }
+                onBackClick = { navHostController.navigateUp() },
+                onFABClick = {
+                    if (profileViewModel.isSignedIn) {
+                        navHostController.navigate(Screen.AddComment.route)
+                    } else {
+                        signInLauncher()
+                    }
+                }
+            )
+        }
+        composable(route = Screen.AddComment.route) {
+            AddCommentScreen(
+                viewModel = hiltViewModel<AddCommentViewModel>(),
+                onBackClick = { navHostController.navigateUp() },
+                onSaveClick = { navHostController.navigateUp() }
             )
         }
     }

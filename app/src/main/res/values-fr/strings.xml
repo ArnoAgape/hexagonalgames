@@ -16,6 +16,7 @@
 
   <string name="homefeed_fragment_label">Home</string>
   <string name="add_fragment_label">Ajout d\'une publication</string>
+  <string name="add_comment_label">Ajout d\'un commentaire</string>
   <string name="by">Par %1$s</string>
   <string name="notification_enable">Activer les notifications</string>
   <string name="notification_disable">Désactiver les notifications</string>
@@ -31,9 +32,10 @@
   <string name="action_save">Sauvegarder</string>
   <string name="contentDescription_go_back">Retour</string>
   <string name="contentDescription_more">Plus</string>
-  <string name="contentDescription_notification_icon">Notification icon</string>
+  <string name="contentDescription_notification_icon">Icône de notification</string>
   <string name="profile_picture">Your profile picture</string>
   <string name="error_title">Titre non valide</string>
+  <string name="error_comment">Le commentaire ne doit pas être vide</string>
   <string name="error_description">Descrition non valide</string>
   <string name="error_photo">Photo non valide</string>
   <string name="publishing">Publication en cours…</string>

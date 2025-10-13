@@ -96,6 +96,7 @@ class AddPostViewModel @Inject constructor(
                     photoUrl = formEvent.photoUrl
                 )
             }
+            else -> null
         }
     }
 
@@ -142,7 +143,6 @@ class AddPostViewModel @Inject constructor(
             else -> null
         }
     }
-
 
     fun onSaveClicked() {
         Log.d("AddPostViewModel", ">>> Post before validation: ${_post.value}")

@@ -3,7 +3,6 @@ package com.openclassrooms.hexagonal.games.data.repository
 import android.net.Uri
 import android.util.Log
 import androidx.core.net.toUri
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import com.openclassrooms.hexagonal.games.data.service.PostApi
 import com.openclassrooms.hexagonal.games.domain.model.Post
@@ -32,8 +31,6 @@ class PostRepository @Inject constructor(private val postApi: PostApi) {
      */
     val posts: Flow<List<Post>> = postApi.getPostsOrderByCreationDateDesc()
 
-    val post: Flow<Post> = postApi.getCurrentPost()
-
     /**
      * Adds a new Post to the data source using the injected PostApi.
      *
@@ -41,15 +38,15 @@ class PostRepository @Inject constructor(private val postApi: PostApi) {
      */
 
     suspend fun addPost(post: Post) {
-        // 1️⃣ Upload de l'image
+        // Upload de l'image
         val imageUrl = post.photoUrl?.let { uri ->
             uploadImageToFirebase(uri)?.toUri()
         }
 
-        // 2️⃣ Construction du post complet
+        // Construction du post complet
         val postToSave = post.copy(photoUrl = imageUrl)
 
-        // 3️⃣ Délégation à l’API
+        // Délégation à l’API
         postApi.addPost(postToSave)
         Log.d("PostRepository", "✅ Post envoyé vers Firestore avec imageUrl=$imageUrl")
     }

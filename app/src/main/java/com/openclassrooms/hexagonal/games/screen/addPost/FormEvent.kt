@@ -24,6 +24,8 @@ sealed class FormEvent {
   data class DescriptionChanged(val description: String) : FormEvent()
 
   data class PhotoChanged(val photoUrl: Uri?) : FormEvent()
+
+  data class CommentChanged(val comment: String) : FormEvent()
   
 }
 
@@ -42,5 +44,7 @@ sealed class FormError(@StringRes val messageRes: Int) {
   data object TitleError : FormError(R.string.error_title)
   data object DescriptionError : FormError(R.string.error_description)
   data object PhotoError : FormError(R.string.error_photo)
+
+  data object CommentError : FormError(R.string.error_comment)
   
 }

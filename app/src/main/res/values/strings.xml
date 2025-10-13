@@ -15,6 +15,7 @@
   <string name="user_picture">Profile picture</string>
 
   <string name="add_fragment_label">Add a post</string>
+  <string name="add_comment_label">Add a comment</string>
   <string name="homefeed_fragment_label">Home</string>
   <string name="by">By %1$s</string>
   <string name="notification_enable">Enable notifications</string>
@@ -31,9 +32,10 @@
   <string name="action_save">Save</string>
   <string name="contentDescription_go_back">Go back</string>
   <string name="contentDescription_more">More</string>
-  <string name="contentDescription_notification_icon">Icone de notification</string>
+  <string name="contentDescription_notification_icon">Notification icon</string>
   <string name="profile_picture">Your profile picture</string>
   <string name="error_title">Title not valid</string>
+  <string name="error_comment">Comment must not be empty</string>
   <string name="error_description">Invalid description</string>
   <string name="error_photo">Invalid photo</string>
   <string name="publishing">Publishing…</string>
