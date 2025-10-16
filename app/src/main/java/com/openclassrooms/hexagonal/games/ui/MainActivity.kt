@@ -76,18 +76,20 @@ fun HexagonalGamesNavHost(
     navHostController: NavHostController,
     showMessage: (String) -> Unit
 ) {
+    val profileViewModel: ProfileViewModel = hiltViewModel()
+
     NavHost(
         navController = navHostController,
         startDestination = Screen.Homefeed.route
     ) {
 
-
         composable(route = Screen.Homefeed.route) {
             val signInLauncher = rememberSignInLauncher(
                 navController = navHostController,
-                showMessage = showMessage
+                showMessage = showMessage,
+                profileViewModel = profileViewModel
             )
-            val profileViewModel: ProfileViewModel = hiltViewModel()
+
             HomefeedScreen(
                 homeViewModel = hiltViewModel<HomefeedViewModel>(),
                 onFABClick = {
@@ -127,15 +129,16 @@ fun HexagonalGamesNavHost(
         }
         composable(route = Screen.Profile.route) {
             ProfileScreen(
-                viewModel = hiltViewModel<ProfileViewModel>(),
+                viewModel = profileViewModel,
                 onBackClick = { navHostController.navigateUp() }
             )
         }
         composable(route = Screen.DetailPost.route) {
             val signInLauncher = rememberSignInLauncher(
                 navController = navHostController,
-                showMessage = showMessage
-            )
+                showMessage = showMessage,
+                profileViewModel = profileViewModel)
+
             val profileViewModel: ProfileViewModel = hiltViewModel()
             DetailScreen(
                 viewModel = hiltViewModel<DetailPostViewModel>(),
@@ -171,35 +174,37 @@ fun HexagonalGamesNavHost(
 @Composable
 fun rememberSignInLauncher(
     navController: NavHostController,
-    showMessage: (String) -> Unit
+    showMessage: (String) -> Unit,
+    profileViewModel: ProfileViewModel
 ): () -> Unit {
     val firebaseAuth = FirebaseAuth.getInstance()
 
-    // Le lanceur pour l'activité de connexion FirebaseUI.
     val signInLauncher: ActivityResultLauncher<Intent> = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
         val response = IdpResponse.fromResultIntent(result.data)
 
         if (result.resultCode == Activity.RESULT_OK) {
-            // Connexion réussie
             val user = firebaseAuth.currentUser
             Log.d("Auth", "Connexion réussie : ${user?.email ?: "Utilisateur inconnu"}")
-            showMessage("Connexion réussie !") // Message pour l'utilisateur
+
+            profileViewModel.syncUserWithFirestore()
+
+            showMessage("Connexion réussie !")
 
             navController.navigate(Screen.Homefeed.route) {
-                popUpTo(navController.graph.startDestinationId) { // Ou popUpTo(Screen.Homefeed.route)
+                popUpTo(navController.graph.startDestinationId) {
                     inclusive = true
                 }
-                launchSingleTop = true // Évite de recréer Homefeed s'il est déjà au sommet
+                launchSingleTop = true
             }
         } else {
-            // Connexion échouée ou annulée par l'utilisateur
+            // Failed or canceled by the user
             if (response == null) {
                 Log.w("Auth", "Connexion annulée par l'utilisateur.")
                 showMessage("Connexion annulée.")
             } else {
-                // Une erreur s'est produite lors de la connexion
+                // Error
                 val errorCode = response.error?.errorCode
                 Log.w("Auth", "Échec de la connexion. Code d'erreur : $errorCode", response.error)
                 showMessage("Échec de la connexion. Veuillez réessayer.")
@@ -207,10 +212,6 @@ fun rememberSignInLauncher(
         }
     }
 
-    // `remember` pour les fournisseurs et l'intention de connexion afin d'éviter de les recréer
-    // inutilement à chaque recomposition si les dépendances ne changent pas.
-    // Bien que pour ce cas spécifique, l'impact soit minime car cela n'est utilisé que
-    // lors de l'appel de la fonction retournée.
     val providers = remember { listOf(AuthUI.IdpConfig.EmailBuilder().build()) }
     val signInIntent = remember(providers) { // Recréer si `providers` change (peu probable ici)
         AuthUI.getInstance()

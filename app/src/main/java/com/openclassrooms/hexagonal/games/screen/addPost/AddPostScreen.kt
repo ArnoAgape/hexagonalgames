@@ -1,8 +1,10 @@
 package com.openclassrooms.hexagonal.games.screen.addPost
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -55,22 +58,40 @@ import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPostScreen(
-    modifier: Modifier = Modifier,
     viewModel: AddPostViewModel,
     onBackClick: () -> Unit,
     onSaveClick: () -> Unit
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val post by viewModel.post.collectAsStateWithLifecycle()
+    val isPostValid by viewModel.isPostValid.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // When an error occurs
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { error ->
+            val message = when (error) {
+                is FormError.GenericError -> context.getString(R.string.error_generic)
+                else -> context.getString(error.messageRes)
+            }
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // When post is saved
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            Toast.makeText(context, context.getString(R.string.post_success), Toast.LENGTH_SHORT).show()
+            onSaveClick()
+        }
+    }
+
     Scaffold(
-        modifier = modifier,
         topBar = {
             TopAppBar(
-                title = {
-                    Text(stringResource(id = R.string.add_fragment_label))
-                },
+                title = { Text(stringResource(R.string.add_fragment_label)) },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        onBackClick()
-                    }) {
+                    IconButton(onClick = { onBackClick() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(id = R.string.contentDescription_go_back)
@@ -79,59 +100,38 @@ fun AddPostScreen(
                 }
             )
         }
-    ) { contentPadding ->
-        val post by viewModel.post.collectAsStateWithLifecycle()
-        val error by viewModel.error.collectAsStateWithLifecycle()
-        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-        val isPostValid by viewModel.isPostValid.collectAsStateWithLifecycle()
+    ) { innerPadding ->
 
-        when (uiState) {
-            is AddPostUiState.Loading -> {
-                // Loading
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+        if (uiState.isSaving) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator()
+                    Spacer(Modifier.height(16.dp))
                     Text(
                         text = stringResource(R.string.publishing),
-                        modifier = Modifier.padding(top = 80.dp)
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
-
-            is AddPostUiState.Success -> {
-                LaunchedEffect(uiState) {
-                    onSaveClick()
-                }
-            }
-
-            is AddPostUiState.Error -> {
-                val message = (uiState as AddPostUiState.Error).message
-                    ?: stringResource(R.string.unknown_error)
-                Text(
-                    text = "Error : $message",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-
-            AddPostUiState.Idle -> {
-                CreatePost(
-                    modifier = Modifier.padding(contentPadding),
-                    error = error,
-                    title = post.title,
-                    onTitleChanged = { viewModel.onAction(FormEvent.TitleChanged(it)) },
-                    description = post.description ?: "",
-                    onDescriptionChanged = { viewModel.onAction(FormEvent.DescriptionChanged(it)) },
-                    onPhotoSelected = { viewModel.onAction(FormEvent.PhotoChanged(it)) },
-                    onSaveClicked = {
-                        viewModel.onSaveClicked()
-                    },
-                    isPostValid = isPostValid,
-                    uiState = uiState
-                )
-            }
         }
+
+        CreatePost(
+            modifier = Modifier.padding(innerPadding),
+            title = post.title,
+            onTitleChanged = { viewModel.onAction(FormEvent.TitleChanged(it)) },
+            description = post.description,
+            onDescriptionChanged = { viewModel.onAction(FormEvent.DescriptionChanged(it)) },
+            onPhotoSelected = { viewModel.onAction(FormEvent.PhotoChanged(it)) },
+            onSaveClicked = { viewModel.onSaveClicked() },
+            error = uiState.error,
+            isPostValid = isPostValid,
+            uiState = uiState
+        )
     }
 }
 
@@ -140,12 +140,11 @@ private fun CreatePost(
     modifier: Modifier = Modifier,
     title: String,
     onTitleChanged: (String) -> Unit,
-    description: String,
+    description: String?,
     onDescriptionChanged: (String) -> Unit,
     onPhotoSelected: (Uri?) -> Unit,
     onSaveClicked: () -> Unit,
     error: FormError?,
-    forceValidation: Boolean = false,
     isPostValid: Boolean,
     uiState: AddPostUiState
 ) {
@@ -166,10 +165,10 @@ private fun CreatePost(
     }
 
     val showTitleError =
-        (titleFieldHasBeenTouched || forceValidation) && error is FormError.TitleError
+        (titleFieldHasBeenTouched) && error is FormError.TitleError
     val showDescriptionError =
-        (descriptionFieldTouched || forceValidation) && error is FormError.DescriptionError
-    val showPhotoError = (forceValidation) && error is FormError.PhotoError
+        (descriptionFieldTouched) && error is FormError.DescriptionError
+    val showPhotoError = error is FormError.PhotoError
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -214,22 +213,24 @@ private fun CreatePost(
                     )
                 }
 
-                OutlinedTextField(
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .fillMaxWidth()
-                        .onFocusChanged { focusState ->
-                            if (descriptionFocused && !focusState.isFocused) {
-                                descriptionFieldTouched = true
-                            }
-                            descriptionFocused = focusState.isFocused
-                        },
-                    value = description,
-                    isError = showDescriptionError,
-                    onValueChange = { onDescriptionChanged(it) },
-                    label = { Text(stringResource(id = R.string.hint_description)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-                )
+                if (description != null) {
+                    OutlinedTextField(
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                            .fillMaxWidth()
+                            .onFocusChanged { focusState ->
+                                if (descriptionFocused && !focusState.isFocused) {
+                                    descriptionFieldTouched = true
+                                }
+                                descriptionFocused = focusState.isFocused
+                            },
+                        value = description,
+                        isError = showDescriptionError,
+                        onValueChange = { onDescriptionChanged(it) },
+                        label = { Text(stringResource(id = R.string.hint_description)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                    )
+                }
 
                 if (showDescriptionError) {
                     Text(
@@ -289,9 +290,9 @@ private fun CreatePost(
 
             Button(
                 onClick = onSaveClicked,
-                enabled = isPostValid && uiState !is AddPostUiState.Loading
+                enabled = isPostValid && !uiState.isSaving
             ) {
-                if (uiState is AddPostUiState.Loading) {
+                if (uiState.isSaving) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp,
@@ -318,7 +319,7 @@ private fun CreatePostPreview() {
             error = null,
             onPhotoSelected = { },
             isPostValid = true,
-            uiState = AddPostUiState.Idle
+            uiState = AddPostUiState.initial()
         )
     }
 }
@@ -336,7 +337,7 @@ private fun CreatePostErrorPreview() {
             error = FormError.TitleError,
             onPhotoSelected = { },
             isPostValid = true,
-            uiState = AddPostUiState.Idle
+            uiState = AddPostUiState.initial()
         )
     }
 }

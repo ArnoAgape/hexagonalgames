@@ -1,6 +1,5 @@
 package com.openclassrooms.hexagonal.games.domain.model
 
-import android.net.Uri
 import java.io.Serializable
 
 /**
@@ -12,30 +11,30 @@ data class Post(
   /**
    * Unique identifier for the Post.
    */
-  val id: String,
+  val id: String = "",
 
   /**
    * Title of the Post.
    */
-  val title: String,
+  val title: String = "",
 
   /**
    * Optional description for the Post.
    */
-  val description: String?,
+  val description: String? = null,
 
   /**
    * URL of an image associated with the Post, if any.
    */
-  val photoUrl: Uri?,
+  val photoUrl: String? = null,
 
   /**
    * Timestamp representing the creation date and time of the Post in milliseconds since epoch.
    */
-  val timestamp: Long,
+  val timestamp: Long = 0L,
 
   /**
    * User object representing the author of the Post.
    */
-  val author: User?
+  val author: User? = null
 ) : Serializable

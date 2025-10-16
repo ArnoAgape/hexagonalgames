@@ -4,7 +4,6 @@ import com.openclassrooms.hexagonal.games.domain.model.Post
 import com.openclassrooms.hexagonal.games.domain.model.User
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import androidx.core.net.toUri
 import kotlinx.coroutines.flow.map
 
 /**
@@ -32,7 +31,7 @@ class PostFakeApi : PostApi {
         "4",
         "The Door's Game",
         null,
-          "https://picsum.photos/id/85/1080/".toUri(),
+          "https://picsum.photos/id/85/1080/",
         1451638679, // 01/01/2016
         users[2]
       ),
@@ -56,7 +55,7 @@ class PostFakeApi : PostApi {
         "2",
         "The Invisible Window",
         null,
-        "https://picsum.photos/id/40/1080/".toUri(),
+        "https://picsum.photos/id/40/1080/",
         1210645031, // 13/05/2008
         users[1]
       ),

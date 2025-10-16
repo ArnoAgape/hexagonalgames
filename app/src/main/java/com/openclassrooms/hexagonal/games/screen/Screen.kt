@@ -16,5 +16,5 @@ sealed class Screen(
 
   data object DetailPost : Screen("detail/{postId}")
 
-  data object AddComment : Screen("addComment")
+  data object AddComment : Screen("addComment/{postId}")
 }

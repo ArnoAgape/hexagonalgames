@@ -1,9 +1,11 @@
 package com.openclassrooms.hexagonal.games.data.repository
 
-import android.util.Log
-import com.openclassrooms.hexagonal.games.data.service.CommentApi
+import com.google.firebase.firestore.FirebaseFirestore
 import com.openclassrooms.hexagonal.games.domain.model.Comment
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -14,15 +16,9 @@ import javax.inject.Singleton
  * ensuring there's only one instance throughout the application.
  */
 @Singleton
-class CommentRepository @Inject constructor(private val commentApi: CommentApi) {
+class CommentRepository @Inject constructor() {
 
-    /**
-     * Retrieves a Flow object containing a list of Comments ordered by creation date
-     * in ascending order.
-     *
-     * @return Flow containing a list of Comments.
-     */
-    val comments: Flow<List<Comment>> = commentApi.getCommentsOrderByCreationDateAsc()
+    private val db = FirebaseFirestore.getInstance()
 
     /**
      * Adds a new Comment to the data source using the injected CommentApi.
@@ -30,13 +26,28 @@ class CommentRepository @Inject constructor(private val commentApi: CommentApi) 
      * @param comment The Comment object to be added.
      */
 
-    fun addComment(comment: Comment) {
-
-        // Délégation à l’API
-        commentApi.addComment(comment)
-        Log.d("CommentRepository", "✅ Commentaire envoyé vers Firestore avec comment=$comment")
+    suspend fun addComment(postId: String, comment: Comment) {
+        db.collection("posts")
+            .document(postId)
+            .collection("comments")
+            .add(comment)
+            .await()
     }
 
-    fun getCommentById(commentId: String): Flow<Comment?> = commentApi.getCommentById(commentId)
+    fun observeComments(postId: String): Flow<List<Comment>> = callbackFlow {
+        val listener = db.collection("posts")
+            .document(postId)
+            .collection("comments")
+            .addSnapshotListener { snapshot, e ->
+                if (e != null) {
+                    close(e)
+                    return@addSnapshotListener
+                }
+                val comments = snapshot?.toObjects(Comment::class.java).orEmpty()
+                trySend(comments)
+            }
+
+        awaitClose { listener.remove() }
+    }
 
 }

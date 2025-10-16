@@ -8,6 +8,8 @@
   <string name="action_delete_account">Delete account</string>
   <string name="unknown_error">An unknown error occurred.</string>
   <string name="error">Error</string>
+  <string name="error_generic">An issue occurred</string>
+  <string name="no_network">No network</string>
   <string name="loading">Loading…</string>
 
   <string name="user_name">Name</string>
@@ -39,4 +41,5 @@
   <string name="error_description">Invalid description</string>
   <string name="error_photo">Invalid photo</string>
   <string name="publishing">Publishing…</string>
+  <string name="post_success">Post added successfully</string>
 </resources>

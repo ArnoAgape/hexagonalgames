@@ -8,6 +8,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -16,7 +17,13 @@ class ProfileViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _user = MutableStateFlow(userRepository.getCurrentUser())
-    val user: StateFlow<User?> = _user
+    val user: StateFlow<User?> = _user.asStateFlow()
+
+    fun syncUserWithFirestore() {
+        viewModelScope.launch {
+            userRepository.ensureUserInFirestore()
+        }
+    }
 
     val isSignedIn: Boolean
         get() = userRepository.isUserSignedIn()

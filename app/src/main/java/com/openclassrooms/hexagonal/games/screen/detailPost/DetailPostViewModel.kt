@@ -23,12 +23,9 @@ class DetailPostViewModel @Inject constructor(
     ViewModel() {
 
     private val postId: String = checkNotNull(savedStateHandle["postId"])
-
-    private val commentId: String = checkNotNull(savedStateHandle["commentId"])
     private val _uiPostState = MutableStateFlow<DetailPostUiState>(DetailPostUiState.Loading)
     val uiPostState: StateFlow<DetailPostUiState> = _uiPostState.asStateFlow()
-
-    private val _uiCommentState = MutableStateFlow<DetailCommentUiState>(DetailCommentUiState.Loading)
+    private val _uiCommentState = MutableStateFlow(DetailCommentUiState())
     val uiCommentState: StateFlow<DetailCommentUiState> = _uiCommentState.asStateFlow()
 
     init {
@@ -52,20 +49,24 @@ class DetailPostViewModel @Inject constructor(
         }
     }
 
-    private fun observeComment() {
+    private fun observeComments(postId: String) {
         viewModelScope.launch {
-            commentRepository.getCommentById(commentId)
-                .onStart { _uiCommentState.value = DetailCommentUiState.Loading }
+            commentRepository.observeComments(postId)
+                .onStart { _uiCommentState.value = _uiCommentState.value.copy(isLoading = true) }
                 .catch { e ->
-                    _uiCommentState.value = DetailCommentUiState.Error(e.message ?: "Unknown error")
+                    _uiCommentState.value = _uiCommentState.value.copy(
+                        isLoading = false,
+                        error = e.message ?: "Unknown error"
+                    )
                 }
-                .collect { comment ->
-                    if (comment != null) {
-                        _uiCommentState.value = DetailCommentUiState.Success(comment)
-                    } else {
-                        _uiCommentState.value = DetailCommentUiState.Error("Impossible to find the comment")
-                    }
+                .collect { comments ->
+                    _uiCommentState.value = DetailCommentUiState(
+                        isLoading = false,
+                        comments = comments,
+                        error = null
+                    )
                 }
         }
     }
+
 }

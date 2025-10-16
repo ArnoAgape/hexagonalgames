@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.openclassrooms.hexagonal.games.data.repository.PostRepository
 import com.openclassrooms.hexagonal.games.data.repository.UserRepository
 import com.openclassrooms.hexagonal.games.domain.model.Post
-import com.openclassrooms.hexagonal.games.domain.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -14,10 +13,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * This ViewModel manages data and interactions related to adding new posts in the AddScreen.
@@ -29,19 +28,11 @@ class AddPostViewModel @Inject constructor(
     userRepository: UserRepository
 ) : ViewModel() {
 
+    private val _uiState = MutableStateFlow(AddPostUiState.initial())
+    val uiState: StateFlow<AddPostUiState> = _uiState.asStateFlow()
     private val _user = MutableStateFlow(userRepository.getCurrentUser())
-    val user: StateFlow<User?> = _user
-
     private val _error = MutableStateFlow<FormError?>(null)
-    val error = _error.asStateFlow()
-
-    private val _uiState = MutableStateFlow<AddPostUiState>(AddPostUiState.Idle)
-    val uiState = _uiState.asStateFlow()
-
-    /**
-     * Internal mutable state flow representing the current post being edited.
-     */
-    private var _post = MutableStateFlow(
+    private val _post = MutableStateFlow(
         Post(
             id = UUID.randomUUID().toString(),
             title = "",
@@ -56,8 +47,7 @@ class AddPostViewModel @Inject constructor(
      * Public state flow representing the current post being edited.
      * This is immutable for consumers.
      */
-    val post: StateFlow<Post>
-        get() = _post
+    val post: StateFlow<Post> = _post.asStateFlow()
 
     /**
      * StateFlow derived from the post that emits a FormError if the title is empty, null otherwise.
@@ -93,10 +83,11 @@ class AddPostViewModel @Inject constructor(
 
             is FormEvent.PhotoChanged -> {
                 _post.value = _post.value.copy(
-                    photoUrl = formEvent.photoUrl
+                    photoUrl = formEvent.photoUrl?.toString()
                 )
             }
-            else -> null
+
+            else -> Unit
         }
     }
 
@@ -105,27 +96,22 @@ class AddPostViewModel @Inject constructor(
      */
     fun addPost() {
         viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true, isSuccess = false, error = null) }
+
             try {
-                _uiState.value = AddPostUiState.Loading
+                // 🔹 Ajoute l’auteur au post avant l’envoi
+                val postToSave = _post.value.copy(author = _user.value)
 
-                val currentPost = post.value.copy(
-                    id = UUID.randomUUID().toString(),
-                    timestamp = System.currentTimeMillis(),
-                    author = user.value
-                )
+                // 🔹 Appel au repository
+                postRepository.addPost(postToSave)
 
-                postRepository.addPost(currentPost)
+                _uiState.update { it.copy(isSaving = false, isSuccess = true) }
 
-                _uiState.value = AddPostUiState.Success
-                _error.value = null
-
-                Log.d("AddPostViewModel", "Post added successfully: $currentPost")
+                Log.d("AddPostViewModel", "✅ Post ajouté avec succès")
 
             } catch (e: Exception) {
-                if (e !is CancellationException) {
-                    Log.e("AddPostViewModel", "Error while adding the post", e)
-                    _uiState.value = AddPostUiState.Error(e.message)
-                }
+                Log.e("AddPostViewModel", "❌ Erreur lors de l'ajout du post", e)
+                _uiState.update { it.copy(isSaving = false, error = FormError.GenericError) }
             }
         }
     }
@@ -155,5 +141,4 @@ class AddPostViewModel @Inject constructor(
             addPost()
         }
     }
-
 }

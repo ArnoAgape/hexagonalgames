@@ -39,8 +39,9 @@ class PostRepository @Inject constructor(private val postApi: PostApi) {
 
     suspend fun addPost(post: Post) {
         // Upload de l'image
-        val imageUrl = post.photoUrl?.let { uri ->
-            uploadImageToFirebase(uri)?.toUri()
+        val imageUrl = post.photoUrl?.let { uriString ->
+            val uri = uriString.toUri()
+            uploadImageToFirebase(uri)
         }
 
         // Construction du post complet
@@ -50,7 +51,6 @@ class PostRepository @Inject constructor(private val postApi: PostApi) {
         postApi.addPost(postToSave)
         Log.d("PostRepository", "✅ Post envoyé vers Firestore avec imageUrl=$imageUrl")
     }
-
 
     suspend fun uploadImageToFirebase(uri: Uri): String? {
         return withContext(Dispatchers.IO + SupervisorJob()) {

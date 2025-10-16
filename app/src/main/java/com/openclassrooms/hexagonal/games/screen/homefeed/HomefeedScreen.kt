@@ -38,7 +38,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.imageLoader
@@ -80,6 +79,7 @@ fun HomefeedScreen(
                     ) {
                         DropdownMenuItem(
                             onClick = {
+                                showMenu = false
                                 onSettingsClick()
                             },
                             text = {
@@ -90,6 +90,7 @@ fun HomefeedScreen(
                         )
                         DropdownMenuItem(
                             onClick = {
+                                showMenu = false
                                 onProfileClick()
                             },
                             text = {
@@ -228,7 +229,7 @@ private fun HomefeedCellImagePreview() {
                 id = "1",
                 title = "title",
                 description = null,
-                photoUrl = "https://picsum.photos/id/85/1080/".toUri(),
+                photoUrl = "https://picsum.photos/id/85/1080/",
                 timestamp = 1,
                 author = User(
                     id = "1",

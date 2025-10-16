@@ -56,9 +56,9 @@ class AddCommentViewModel @Inject constructor(
         get() = _comment
 
     /**
-     * Attempts to add the current comment to the repository after setting the author.
+     * Attempts to add the current comment to Firestore after setting the author.
      */
-    fun addComment() {
+    fun addComment(postId: String) {
         viewModelScope.launch {
             try {
                 _uiState.value = AddCommentUiState.Loading
@@ -69,7 +69,8 @@ class AddCommentViewModel @Inject constructor(
                     author = user.value
                 )
 
-                commentRepository.addComment(currentComment)
+                // Appel au repository Firebase
+                commentRepository.addComment(postId, currentComment)
 
                 _uiState.value = AddCommentUiState.Success
                 _error.value = null
@@ -84,6 +85,7 @@ class AddCommentViewModel @Inject constructor(
             }
         }
     }
+
 
     /**
      * StateFlow derived from the post that emits a FormError if the title is empty, null otherwise.
@@ -126,7 +128,7 @@ class AddCommentViewModel @Inject constructor(
         }
     }
 
-    fun onSaveClicked() {
+    fun onSaveClicked(postId: String) {
         Log.d("AddPostViewModel", ">>> Post before validation: ${_comment.value}")
         val validationError = verifyComment()
         if (validationError != null) {
@@ -134,7 +136,7 @@ class AddCommentViewModel @Inject constructor(
             _error.value = validationError
         } else {
             Log.d("AddCommentViewModel", ">>> Validation OK, addComment() called")
-            addComment()
+            addComment(postId)
         }
     }
 }

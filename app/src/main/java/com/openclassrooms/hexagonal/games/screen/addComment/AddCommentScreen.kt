@@ -78,7 +78,7 @@ fun AddCommentScreen(
 
         when (uiState) {
             is AddCommentUiState.Loading -> {
-                // Loading
+                // Saving
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -113,7 +113,6 @@ fun AddCommentScreen(
                     comment = comment.content,
                     onTitleChanged = { viewModel.onAction(FormEvent.CommentChanged(it)) },
                     onSaveClicked = {
-                        viewModel.onSaveClicked()
                     },
                     isCommentValid = isCommentValid,
                     uiState = uiState
