@@ -1,11 +1,8 @@
 package com.openclassrooms.hexagonal.games.data.repository
 
-import com.google.firebase.firestore.FirebaseFirestore
+import com.openclassrooms.hexagonal.games.data.service.comment.CommentApi
 import com.openclassrooms.hexagonal.games.domain.model.Comment
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,38 +13,7 @@ import javax.inject.Singleton
  * ensuring there's only one instance throughout the application.
  */
 @Singleton
-class CommentRepository @Inject constructor() {
-
-    private val db = FirebaseFirestore.getInstance()
-
-    /**
-     * Adds a new Comment to the data source using the injected CommentApi.
-     *
-     * @param comment The Comment object to be added.
-     */
-
-    suspend fun addComment(postId: String, comment: Comment) {
-        db.collection("posts")
-            .document(postId)
-            .collection("comments")
-            .add(comment)
-            .await()
-    }
-
-    fun observeComments(postId: String): Flow<List<Comment>> = callbackFlow {
-        val listener = db.collection("posts")
-            .document(postId)
-            .collection("comments")
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    close(e)
-                    return@addSnapshotListener
-                }
-                val comments = snapshot?.toObjects(Comment::class.java).orEmpty()
-                trySend(comments)
-            }
-
-        awaitClose { listener.remove() }
-    }
-
+class CommentRepository @Inject constructor(private val commentApi: CommentApi) {
+    suspend fun addComment(postId: String, comment: Comment) = commentApi.addComment(postId, comment)
+    fun observeComments(postId: String): Flow<List<Comment>> = commentApi.observeComments(postId)
 }

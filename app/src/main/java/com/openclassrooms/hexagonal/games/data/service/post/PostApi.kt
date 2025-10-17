@@ -1,4 +1,4 @@
-package com.openclassrooms.hexagonal.games.data.service
+package com.openclassrooms.hexagonal.games.data.service.post
 
 import com.openclassrooms.hexagonal.games.domain.model.Post
 import kotlinx.coroutines.flow.Flow

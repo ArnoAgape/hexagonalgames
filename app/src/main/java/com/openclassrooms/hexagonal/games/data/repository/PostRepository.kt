@@ -4,7 +4,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.core.net.toUri
 import com.google.firebase.storage.FirebaseStorage
-import com.openclassrooms.hexagonal.games.data.service.PostApi
+import com.openclassrooms.hexagonal.games.data.service.post.PostApi
 import com.openclassrooms.hexagonal.games.domain.model.Post
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -38,44 +38,36 @@ class PostRepository @Inject constructor(private val postApi: PostApi) {
      */
 
     suspend fun addPost(post: Post) {
-        // Upload de l'image
+        // Uploading image
         val imageUrl = post.photoUrl?.let { uriString ->
             val uri = uriString.toUri()
             uploadImageToFirebase(uri)
         }
 
-        // Construction du post complet
+        // Creating post
         val postToSave = post.copy(photoUrl = imageUrl)
 
-        // Délégation à l’API
+        // API
         postApi.addPost(postToSave)
-        Log.d("PostRepository", "✅ Post envoyé vers Firestore avec imageUrl=$imageUrl")
     }
 
     suspend fun uploadImageToFirebase(uri: Uri): String? {
         return withContext(Dispatchers.IO + SupervisorJob()) {
             try {
-                Log.d("FirebaseUpload", "🚀 Début upload : $uri")
-
                 val fileRef = FirebaseStorage.getInstance()
                     .reference
                     .child("images/${System.currentTimeMillis()}.jpg")
 
-                Log.d("FirebaseUpload", "🟡 putFile start...")
                 fileRef.putFile(uri).await()
-                Log.d("FirebaseUpload", "✅ putFile terminé")
 
                 val downloadUrl = fileRef.downloadUrl.await()
-                Log.d("FirebaseUpload", "✅ Download URL : $downloadUrl")
 
                 downloadUrl.toString()
             } catch (e: Exception) {
-                Log.e("FirebaseUpload", "❌ Erreur upload Firebase", e)
+                Log.e("FirebaseUpload", "Error while uploading the picture", e)
                 null
             }
         }
     }
-
     fun getPostById(postId: String): Flow<Post?> = postApi.getPostById(postId)
-
 }

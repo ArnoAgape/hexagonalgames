@@ -1,4 +1,4 @@
-package com.openclassrooms.hexagonal.games.data.service
+package com.openclassrooms.hexagonal.games.data.service.post
 
 import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore

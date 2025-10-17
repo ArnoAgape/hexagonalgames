@@ -1,9 +1,11 @@
 package com.openclassrooms.hexagonal.games.di
 
-import com.google.firebase.auth.FirebaseAuth
-import com.openclassrooms.hexagonal.games.data.repository.UserRepository
-import com.openclassrooms.hexagonal.games.data.service.FirebasePostApi
-import com.openclassrooms.hexagonal.games.data.service.PostApi
+import com.openclassrooms.hexagonal.games.data.service.comment.CommentApi
+import com.openclassrooms.hexagonal.games.data.service.comment.FirebaseCommentApi
+import com.openclassrooms.hexagonal.games.data.service.post.FirebasePostApi
+import com.openclassrooms.hexagonal.games.data.service.user.FirebaseUserApi
+import com.openclassrooms.hexagonal.games.data.service.post.PostApi
+import com.openclassrooms.hexagonal.games.data.service.user.UserApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,11 +21,11 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 class AppModule {
   /**
-   * Provides a Singleton instance of PostApi using a PostFakeApi implementation for testing purposes.
+   * Provides a Singleton instance of PostApi using a FirebasePostApi implementation for testing purposes.
    * This means that whenever a dependency on PostApi is requested, the same instance of PostFakeApi will be used
    * throughout the application, ensuring consistent data for testing scenarios.
    *
-   * @return A Singleton instance of PostFakeApi.
+   * @return A Singleton instance of FirebasePostApi.
    */
   @Provides
   @Singleton
@@ -33,7 +35,14 @@ class AppModule {
 
   @Provides
   @Singleton
-  fun provideUserRepository(): UserRepository {
-    return UserRepository(FirebaseAuth.getInstance())
+  fun provideUserApi(): UserApi {
+    return FirebaseUserApi()
   }
+
+  @Provides
+  @Singleton
+  fun provideCommentApi(): CommentApi {
+    return FirebaseCommentApi()
+  }
+
 }
