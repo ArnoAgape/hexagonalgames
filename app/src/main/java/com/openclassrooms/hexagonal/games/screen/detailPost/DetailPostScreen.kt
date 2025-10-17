@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -142,6 +144,37 @@ fun DetailScreen(
                     modifier = Modifier.padding(contentPadding),
                     post = post
                 )
+            }
+        }
+        when (commentState) {
+            is DetailCommentUiState.Loading -> {
+                CircularProgressIndicator()
+            }
+
+            is DetailCommentUiState.Error -> {
+                val message = (commentState as DetailCommentUiState.Error).message
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(contentPadding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Error: $message",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+
+            is DetailCommentUiState.Success -> {
+                LazyColumn {
+                    items((commentState as DetailCommentUiState.Success).comments) { comment ->
+                        CommentContent(
+                            modifier = Modifier.padding(contentPadding),
+                            comment = comment
+                        )
+                    }
+                }
             }
         }
     }

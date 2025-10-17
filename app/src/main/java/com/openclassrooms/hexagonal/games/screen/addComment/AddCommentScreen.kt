@@ -1,10 +1,14 @@
 package com.openclassrooms.hexagonal.games.screen.addComment
 
+import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -32,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -45,13 +50,36 @@ import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCommentScreen(
-    modifier: Modifier = Modifier,
     viewModel: AddCommentViewModel,
+    postId: String,
     onBackClick: () -> Unit,
     onSaveClick: () -> Unit
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val comment by viewModel.comment.collectAsStateWithLifecycle()
+    val isCommentValid by viewModel.isCommentValid.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // When an error occurs
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { error ->
+            val message = when (error) {
+                is FormError.GenericError -> context.getString(R.string.error_generic)
+                else -> context.getString(error.messageRes)
+            }
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // When comment is saved
+    LaunchedEffect(uiState.isSuccess) {
+        if (uiState.isSuccess) {
+            Toast.makeText(context, context.getString(R.string.comment_success), Toast.LENGTH_SHORT).show()
+            onSaveClick()
+        }
+    }
+
     Scaffold(
-        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = {
@@ -71,54 +99,33 @@ fun AddCommentScreen(
         }
     ) { contentPadding ->
 
-        val comment by viewModel.comment.collectAsStateWithLifecycle()
-        val error by viewModel.error.collectAsStateWithLifecycle()
-        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-        val isCommentValid by viewModel.isCommentValid.collectAsStateWithLifecycle()
-
-        when (uiState) {
-            is AddCommentUiState.Loading -> {
-                // Saving
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
+        if (uiState.isSaving) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator()
+                    Spacer(Modifier.height(16.dp))
                     Text(
                         text = stringResource(R.string.publishing),
-                        modifier = Modifier.padding(top = 80.dp)
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
-
-            is AddCommentUiState.Success -> {
-                LaunchedEffect(uiState) {
-                    onSaveClick()
-                }
-            }
-
-            is AddCommentUiState.Error -> {
-                val message = (uiState as AddCommentUiState.Error).message
-                    ?: stringResource(R.string.unknown_error)
-                Text(
-                    text = "Error : $message",
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-
-            AddCommentUiState.Idle -> {
-                CreateComment(
-                    modifier = Modifier.padding(contentPadding),
-                    error = error,
-                    comment = comment.content,
-                    onTitleChanged = { viewModel.onAction(FormEvent.CommentChanged(it)) },
-                    onSaveClicked = {
-                    },
-                    isCommentValid = isCommentValid,
-                    uiState = uiState
-                )
-            }
         }
+
+        CreateComment(
+            modifier = Modifier.padding(contentPadding),
+            comment = comment.content,
+            onContentChanged = { viewModel.onAction(FormEvent.CommentChanged(it)) },
+            onSaveClicked = { viewModel.onSaveClicked(postId) },
+            error = uiState.error,
+            isCommentValid = isCommentValid,
+            uiState = uiState
+        )
     }
 }
 
@@ -126,22 +133,21 @@ fun AddCommentScreen(
 private fun CreateComment(
     modifier: Modifier = Modifier,
     comment: String,
-    onTitleChanged: (String) -> Unit,
+    onContentChanged: (String) -> Unit,
     onSaveClicked: () -> Unit,
     error: FormError?,
-    forceValidation: Boolean = false,
     isCommentValid: Boolean,
     uiState: AddCommentUiState
 ) {
-    var titleFieldHasBeenTouched by remember { mutableStateOf(false) }
+    var commentFieldHasBeenTouched by remember { mutableStateOf(false) }
     var wasFocused by remember { mutableStateOf(false) }
+
     val scrollState = rememberScrollState()
 
-    val showTitleError =
-        (titleFieldHasBeenTouched || forceValidation) && error is FormError.TitleError
+    val showCommentError =
+        (commentFieldHasBeenTouched) && error is FormError.CommentError
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
@@ -162,19 +168,18 @@ private fun CreateComment(
                         .fillMaxWidth()
                         .onFocusChanged { focusState ->
                             if (wasFocused && !focusState.isFocused) {
-                                titleFieldHasBeenTouched = true
+                                commentFieldHasBeenTouched = true
                             }
                             wasFocused = focusState.isFocused
                         },
                     value = comment,
-                    isError = showTitleError,
-                    onValueChange = { onTitleChanged(it) },
-                    label = { Text(stringResource(id = R.string.hint_title)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    singleLine = true
+                    isError = showCommentError,
+                    onValueChange = { onContentChanged(it) },
+                    label = { Text(stringResource(id = R.string.hint_comment)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                 )
 
-                if (showTitleError) {
+                if (showCommentError) {
                     Text(
                         text = stringResource(id = error.messageRes),
                         color = MaterialTheme.colorScheme.error,
@@ -185,9 +190,9 @@ private fun CreateComment(
             }
             Button(
                 onClick = onSaveClicked,
-                enabled = isCommentValid && uiState !is AddCommentUiState.Loading
+                enabled = isCommentValid && !uiState.isSaving
             ) {
-                if (uiState is AddCommentUiState.Loading) {
+                if (uiState.isSaving) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp,
@@ -207,11 +212,11 @@ private fun CreateCommentPreview() {
     HexagonalGamesTheme {
         CreateComment(
             comment = "test",
-            onTitleChanged = { },
+            onContentChanged = { },
             onSaveClicked = { },
             error = null,
             isCommentValid = true,
-            uiState = AddCommentUiState.Idle
+            uiState = AddCommentUiState.initial()
         )
     }
 }

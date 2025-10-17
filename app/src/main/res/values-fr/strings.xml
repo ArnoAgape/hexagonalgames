@@ -26,6 +26,7 @@
 
   <string name="hint_title">Titre</string>
   <string name="hint_description">Description</string>
+  <string name="hint_comment">Commentaire</string>
   <string name="select_photo">Sélectionner une photo</string>
   <string name="change_photo">Choisir une autre photo</string>
   <string name="preview_photo">Prévisualisation de la photo sélectionnée par l\'utilisateur</string>
@@ -37,9 +38,10 @@
   <string name="contentDescription_notification_icon">Icône de notification</string>
   <string name="profile_picture">Your profile picture</string>
   <string name="error_title">Titre non valide</string>
-  <string name="error_comment">Le commentaire ne doit pas être vide</string>
+  <string name="error_comment">Commentaire non valide</string>
   <string name="error_description">Descrition non valide</string>
   <string name="error_photo">Photo non valide</string>
   <string name="publishing">Publication en cours…</string>
   <string name="post_success">Article ajouté avec succès</string>
+  <string name="comment_success">Commentaire ajouté avec succès</string>
 </resources>

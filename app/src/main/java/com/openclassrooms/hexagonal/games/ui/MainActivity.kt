@@ -17,9 +17,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
 import com.google.firebase.auth.FirebaseAuth
@@ -152,9 +154,13 @@ fun HexagonalGamesNavHost(
                 }
             )
         }
-        composable(route = Screen.AddComment.route) {
+        composable(route = Screen.AddComment.route,
+            arguments = listOf(navArgument("postId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val postId = backStackEntry.arguments?.getString("postId") ?: ""
             AddCommentScreen(
                 viewModel = hiltViewModel<AddCommentViewModel>(),
+                postId = postId,
                 onBackClick = { navHostController.navigateUp() },
                 onSaveClick = { navHostController.navigateUp() }
             )

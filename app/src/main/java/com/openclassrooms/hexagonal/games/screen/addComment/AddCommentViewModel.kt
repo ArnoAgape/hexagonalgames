@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.openclassrooms.hexagonal.games.data.repository.CommentRepository
 import com.openclassrooms.hexagonal.games.data.repository.UserRepository
 import com.openclassrooms.hexagonal.games.domain.model.Comment
-import com.openclassrooms.hexagonal.games.domain.model.User
 import com.openclassrooms.hexagonal.games.screen.addPost.FormError
 import com.openclassrooms.hexagonal.games.screen.addPost.FormEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,10 +15,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class AddCommentViewModel @Inject constructor(
@@ -27,14 +26,11 @@ class AddCommentViewModel @Inject constructor(
     userRepository: UserRepository
 ) : ViewModel() {
 
+    private val _uiState = MutableStateFlow(AddCommentUiState.initial())
+    val uiState: StateFlow<AddCommentUiState> = _uiState.asStateFlow()
     private val _user = MutableStateFlow(userRepository.getCurrentUser())
-    val user: StateFlow<User?> = _user
-
     private val _error = MutableStateFlow<FormError?>(null)
-    val error = _error.asStateFlow()
 
-    private val _uiState = MutableStateFlow<AddCommentUiState>(AddCommentUiState.Idle)
-    val uiState = _uiState.asStateFlow()
 
     /**
      * Internal mutable state flow representing the current comment being edited.
@@ -52,43 +48,10 @@ class AddCommentViewModel @Inject constructor(
      * Public state flow representing the current post being edited.
      * This is immutable for consumers.
      */
-    val comment: StateFlow<Comment>
-        get() = _comment
+    val comment: StateFlow<Comment> = _comment.asStateFlow()
 
     /**
-     * Attempts to add the current comment to Firestore after setting the author.
-     */
-    fun addComment(postId: String) {
-        viewModelScope.launch {
-            try {
-                _uiState.value = AddCommentUiState.Loading
-
-                val currentComment = comment.value.copy(
-                    id = UUID.randomUUID().toString(),
-                    timestamp = System.currentTimeMillis(),
-                    author = user.value
-                )
-
-                // Appel au repository Firebase
-                commentRepository.addComment(postId, currentComment)
-
-                _uiState.value = AddCommentUiState.Success
-                _error.value = null
-
-                Log.d("AddCommentViewModel", "Comment added successfully: $currentComment")
-
-            } catch (e: Exception) {
-                if (e !is CancellationException) {
-                    Log.e("AddCommentViewModel", "Error while adding the comment", e)
-                    _uiState.value = AddCommentUiState.Error(e.message)
-                }
-            }
-        }
-    }
-
-
-    /**
-     * StateFlow derived from the post that emits a FormError if the title is empty, null otherwise.
+     * StateFlow derived from the post that emits a FormError if the content is empty, null otherwise.
      */
     val isCommentValid = comment.map { currentComment ->
         currentComment.content.isNotBlank()
@@ -105,13 +68,37 @@ class AddCommentViewModel @Inject constructor(
      */
     fun onAction(formEvent: FormEvent) {
         when (formEvent) {
-            is FormEvent.DescriptionChanged -> {
+            is FormEvent.CommentChanged -> {
                 _comment.value = _comment.value.copy(
-                    content = formEvent.description
+                    content = formEvent.comment
                 )
             }
 
-            else -> null
+            else -> Unit
+        }
+    }
+
+    /**
+     * Attempts to add the current comment to the repository after setting the author.
+     */
+    fun addComment(postId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true, isSuccess = false, error = null) }
+
+            try {
+
+                val commentToSave = _comment.value.copy(author = _user.value)
+
+                commentRepository.addComment(postId, commentToSave)
+
+                _uiState.update { it.copy(isSaving = false, isSuccess = true) }
+
+                Log.d("AddCommentViewModel", "Comment added successfully: $commentToSave")
+
+            } catch (e: Exception) {
+                Log.e("AddCommentViewModel", "Error while adding the comment", e)
+                _uiState.update { it.copy(isSaving = false, error = FormError.GenericError) }
+            }
         }
     }
 
@@ -127,15 +114,11 @@ class AddCommentViewModel @Inject constructor(
             else -> null
         }
     }
-
     fun onSaveClicked(postId: String) {
-        Log.d("AddPostViewModel", ">>> Post before validation: ${_comment.value}")
-        val validationError = verifyComment()
-        if (validationError != null) {
-            Log.d("AddCommentViewModel", ">>> Validation failed: $validationError")
-            _error.value = validationError
+        _error.value = null
+        if (!isCommentValid.value) {
+            _error.value = FormError.CommentError
         } else {
-            Log.d("AddCommentViewModel", ">>> Validation OK, addComment() called")
             addComment(postId)
         }
     }

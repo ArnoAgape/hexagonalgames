@@ -2,19 +2,16 @@ package com.openclassrooms.hexagonal.games.screen
 
 import androidx.navigation.NamedNavArgument
 
-sealed class Screen(
-  val route: String,
-  val navArguments: List<NamedNavArgument> = emptyList()
-) {
-  data object Homefeed : Screen("homefeed")
-  
-  data object AddPost : Screen("addPost")
-  
-  data object Settings : Screen("settings")
+sealed class Screen(val route: String) {
+    data object Homefeed : Screen("homefeed")
 
-  data object Profile : Screen("profile")
+    data object AddPost : Screen("addPost")
 
-  data object DetailPost : Screen("detail/{postId}")
+    data object Settings : Screen("settings")
 
-  data object AddComment : Screen("addComment/{postId}")
+    data object Profile : Screen("profile")
+
+    data object DetailPost : Screen("detail/{postId}")
+
+    data object AddComment : Screen("addComment/{postId}")
 }

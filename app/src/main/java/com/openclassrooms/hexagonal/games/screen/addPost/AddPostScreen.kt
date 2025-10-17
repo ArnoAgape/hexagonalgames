@@ -54,6 +54,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +101,23 @@ fun AddPostScreen(
                 }
             )
         }
-    ) { innerPadding ->
+    ) { contentPadding ->
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            CreatePost(
+                modifier = Modifier.padding(contentPadding),
+                title = post.title,
+                onTitleChanged = { viewModel.onAction(FormEvent.TitleChanged(it)) },
+                description = post.description,
+                onDescriptionChanged = { viewModel.onAction(FormEvent.DescriptionChanged(it)) },
+                photoUrl = post.photoUrl,
+                onPhotoSelected = { viewModel.onAction(FormEvent.PhotoChanged(it)) },
+                onSaveClicked = { viewModel.onSaveClicked() },
+                error = uiState.error,
+                isPostValid = isPostValid,
+                uiState = uiState
+            )
+        }
 
         if (uiState.isSaving) {
             Box(
@@ -119,19 +136,6 @@ fun AddPostScreen(
                 }
             }
         }
-
-        CreatePost(
-            modifier = Modifier.padding(innerPadding),
-            title = post.title,
-            onTitleChanged = { viewModel.onAction(FormEvent.TitleChanged(it)) },
-            description = post.description,
-            onDescriptionChanged = { viewModel.onAction(FormEvent.DescriptionChanged(it)) },
-            onPhotoSelected = { viewModel.onAction(FormEvent.PhotoChanged(it)) },
-            onSaveClicked = { viewModel.onSaveClicked() },
-            error = uiState.error,
-            isPostValid = isPostValid,
-            uiState = uiState
-        )
     }
 }
 
@@ -142,6 +146,7 @@ private fun CreatePost(
     onTitleChanged: (String) -> Unit,
     description: String?,
     onDescriptionChanged: (String) -> Unit,
+    photoUrl: String?,
     onPhotoSelected: (Uri?) -> Unit,
     onSaveClicked: () -> Unit,
     error: FormError?,
@@ -149,18 +154,19 @@ private fun CreatePost(
     uiState: AddPostUiState
 ) {
     var titleFieldHasBeenTouched by remember { mutableStateOf(false) }
-    var wasFocused by remember { mutableStateOf(false) }
+    var titleWasFocused by remember { mutableStateOf(false) }
 
     var descriptionFieldTouched by remember { mutableStateOf(false) }
-    var descriptionFocused by remember { mutableStateOf(false) }
+    var descriptionWasFocused by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val selectedImageUri = remember(photoUrl) {
+        photoUrl?.toUri()
+    }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        selectedImageUri = uri
         onPhotoSelected(uri)
     }
 
@@ -191,10 +197,10 @@ private fun CreatePost(
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                         .onFocusChanged { focusState ->
-                            if (wasFocused && !focusState.isFocused) {
+                            if (titleWasFocused && !focusState.isFocused) {
                                 titleFieldHasBeenTouched = true
                             }
-                            wasFocused = focusState.isFocused
+                            titleWasFocused = focusState.isFocused
                         },
                     value = title,
                     isError = showTitleError,
@@ -219,10 +225,10 @@ private fun CreatePost(
                             .padding(top = 16.dp)
                             .fillMaxWidth()
                             .onFocusChanged { focusState ->
-                                if (descriptionFocused && !focusState.isFocused) {
+                                if (descriptionWasFocused && !focusState.isFocused) {
                                     descriptionFieldTouched = true
                                 }
-                                descriptionFocused = focusState.isFocused
+                                descriptionWasFocused = focusState.isFocused
                             },
                         value = description,
                         isError = showDescriptionError,
@@ -315,6 +321,7 @@ private fun CreatePostPreview() {
             onTitleChanged = { },
             description = "description",
             onDescriptionChanged = { },
+            photoUrl = null,
             onSaveClicked = { },
             error = null,
             onPhotoSelected = { },
@@ -333,6 +340,7 @@ private fun CreatePostErrorPreview() {
             onTitleChanged = { },
             description = "description",
             onDescriptionChanged = { },
+            photoUrl = null,
             onSaveClicked = { },
             error = FormError.TitleError,
             onPhotoSelected = { },

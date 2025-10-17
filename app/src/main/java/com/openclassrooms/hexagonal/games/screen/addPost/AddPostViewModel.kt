@@ -107,10 +107,10 @@ class AddPostViewModel @Inject constructor(
 
                 _uiState.update { it.copy(isSaving = false, isSuccess = true) }
 
-                Log.d("AddPostViewModel", "✅ Post ajouté avec succès")
+                Log.d("AddPostViewModel", "Post added successfully: $postToSave")
 
             } catch (e: Exception) {
-                Log.e("AddPostViewModel", "❌ Erreur lors de l'ajout du post", e)
+                Log.e("AddPostViewModel", "Error while adding the post", e)
                 _uiState.update { it.copy(isSaving = false, error = FormError.GenericError) }
             }
         }

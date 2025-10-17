@@ -25,11 +25,12 @@ class DetailPostViewModel @Inject constructor(
     private val postId: String = checkNotNull(savedStateHandle["postId"])
     private val _uiPostState = MutableStateFlow<DetailPostUiState>(DetailPostUiState.Loading)
     val uiPostState: StateFlow<DetailPostUiState> = _uiPostState.asStateFlow()
-    private val _uiCommentState = MutableStateFlow(DetailCommentUiState())
+    private val _uiCommentState = MutableStateFlow<DetailCommentUiState>(DetailCommentUiState.Loading)
     val uiCommentState: StateFlow<DetailCommentUiState> = _uiCommentState.asStateFlow()
 
     init {
         observePost()
+        observeComments(postId)
     }
 
     private fun observePost() {
@@ -48,25 +49,20 @@ class DetailPostViewModel @Inject constructor(
                 }
         }
     }
-
     private fun observeComments(postId: String) {
         viewModelScope.launch {
             commentRepository.observeComments(postId)
-                .onStart { _uiCommentState.value = _uiCommentState.value.copy(isLoading = true) }
+                .onStart { _uiCommentState.value = DetailCommentUiState.Loading }
                 .catch { e ->
-                    _uiCommentState.value = _uiCommentState.value.copy(
-                        isLoading = false,
-                        error = e.message ?: "Unknown error"
-                    )
+                    _uiCommentState.value = DetailCommentUiState.Error(e.message ?: "Unknown error")
                 }
                 .collect { comments ->
-                    _uiCommentState.value = DetailCommentUiState(
-                        isLoading = false,
-                        comments = comments,
-                        error = null
-                    )
+                    if (comments.isNotEmpty()) {
+                        _uiCommentState.value = DetailCommentUiState.Success(comments)
+                    } else {
+                        _uiCommentState.value = DetailCommentUiState.Error("Impossible to find the comments")
+                    }
                 }
         }
     }
-
 }
