@@ -17,7 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
@@ -138,10 +137,7 @@ fun DetailScreen(
                         .padding(contentPadding)
                 ) {
                     item {
-                        PostContent(
-                            post = post
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
+                        PostContent(post = post)
                     }
 
                     when (commentState) {
@@ -190,7 +186,7 @@ fun DetailScreen(
 private fun PostContent(
     post: Post
 ) {
-    ElevatedCard(
+    Surface(
         modifier = Modifier
     ) {
         Column(
@@ -236,6 +232,12 @@ private fun PostContent(
                         .clip(RoundedCornerShape(12.dp))
                 )
             }
+            Spacer(modifier = Modifier.height(40.dp))
+            Text(
+                text = stringResource(R.string.title_comments),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
         }
     }
 }
@@ -254,14 +256,6 @@ private fun CommentContent(
             modifier = modifier
                 .padding(16.dp)
         ) {
-            Text(
-                text = stringResource(R.string.title_comments),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             user?.displayName?.let {
                 Text(
                     text = stringResource(R.string.by, it),

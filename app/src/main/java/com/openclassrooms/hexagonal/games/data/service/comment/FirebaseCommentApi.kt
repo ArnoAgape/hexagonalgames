@@ -1,6 +1,7 @@
 package com.openclassrooms.hexagonal.games.data.service.comment
 
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.openclassrooms.hexagonal.games.domain.model.Comment
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -30,6 +31,7 @@ class FirebaseCommentApi : CommentApi {
         val listener = db.collection("posts")
             .document(postId)
             .collection("comments")
+            .orderBy("timestamp", Query.Direction.ASCENDING)
             .addSnapshotListener { snapshot, e ->
                 if (e != null) {
                     close(e)
