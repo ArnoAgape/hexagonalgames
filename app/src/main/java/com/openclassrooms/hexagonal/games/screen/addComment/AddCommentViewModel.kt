@@ -86,7 +86,6 @@ class AddCommentViewModel @Inject constructor(
             _uiState.update { it.copy(isSaving = true, isSuccess = false, error = null) }
 
             try {
-
                 val commentToSave = _comment.value.copy(author = _user.value)
 
                 commentRepository.addComment(postId, commentToSave)

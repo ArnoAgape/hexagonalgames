@@ -1,7 +1,5 @@
 package com.openclassrooms.hexagonal.games.screen
 
-import androidx.navigation.NamedNavArgument
-
 sealed class Screen(val route: String) {
     data object Homefeed : Screen("homefeed")
 
@@ -11,7 +9,11 @@ sealed class Screen(val route: String) {
 
     data object Profile : Screen("profile")
 
-    data object DetailPost : Screen("detail/{postId}")
+    data object DetailPost : Screen("detail") {
+        fun createRoute(postId: String) = "detail/$postId"
+    }
 
-    data object AddComment : Screen("addComment/{postId}")
+    data object AddComment : Screen("addComment"){
+        fun createRoute(postId: String) = "addComment/$postId"
+    }
 }

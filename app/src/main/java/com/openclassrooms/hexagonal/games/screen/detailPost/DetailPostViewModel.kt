@@ -1,10 +1,13 @@
 package com.openclassrooms.hexagonal.games.screen.detailPost
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.openclassrooms.hexagonal.games.data.repository.CommentRepository
 import com.openclassrooms.hexagonal.games.data.repository.PostRepository
+import com.openclassrooms.hexagonal.games.data.repository.UserRepository
+import com.openclassrooms.hexagonal.games.domain.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,19 +21,22 @@ import javax.inject.Inject
 class DetailPostViewModel @Inject constructor(
     private val postRepository: PostRepository,
     private val commentRepository: CommentRepository,
+    userRepository: UserRepository,
     savedStateHandle: SavedStateHandle
 ) :
     ViewModel() {
 
     private val postId: String = checkNotNull(savedStateHandle["postId"])
+    private val userId = userRepository.getCurrentUser()
     private val _uiPostState = MutableStateFlow<DetailPostUiState>(DetailPostUiState.Loading)
     val uiPostState: StateFlow<DetailPostUiState> = _uiPostState.asStateFlow()
     private val _uiCommentState = MutableStateFlow<DetailCommentUiState>(DetailCommentUiState.Loading)
     val uiCommentState: StateFlow<DetailCommentUiState> = _uiCommentState.asStateFlow()
 
     init {
+        Log.d("DetailPostViewModel", ">>> postId = $postId")
         observePost()
-        observeComments(postId)
+        observeComments(postId, userId)
     }
 
     private fun observePost() {
@@ -49,7 +55,7 @@ class DetailPostViewModel @Inject constructor(
                 }
         }
     }
-    private fun observeComments(postId: String) {
+    private fun observeComments(postId: String, user: User?) {
         viewModelScope.launch {
             commentRepository.observeComments(postId)
                 .onStart { _uiCommentState.value = DetailCommentUiState.Loading }
@@ -57,10 +63,11 @@ class DetailPostViewModel @Inject constructor(
                     _uiCommentState.value = DetailCommentUiState.Error(e.message ?: "Unknown error")
                 }
                 .collect { comments ->
-                    if (comments.isNotEmpty()) {
-                        _uiCommentState.value = DetailCommentUiState.Success(comments)
+                    Log.d("DetailPostViewModel", ">>> Received comments = $comments")
+                    _uiCommentState.value = if (comments.isNotEmpty()) {
+                        DetailCommentUiState.Success(comments, user)
                     } else {
-                        _uiCommentState.value = DetailCommentUiState.Error("Impossible to find the comments")
+                        DetailCommentUiState.Error("No comments found")
                     }
                 }
         }

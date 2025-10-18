@@ -18,10 +18,11 @@ class FirebaseCommentApi : CommentApi {
      */
 
     override suspend fun addComment(postId: String, comment: Comment) {
+        val commentWithPostId = comment.copy(postId = postId)
         db.collection("posts")
             .document(postId)
             .collection("comments")
-            .add(comment)
+            .add(commentWithPostId)
             .await()
     }
 

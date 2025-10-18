@@ -1,6 +1,5 @@
 package com.openclassrooms.hexagonal.games.screen.detailPost
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,14 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
@@ -39,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -55,7 +49,6 @@ import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailScreen(
-    modifier: Modifier = Modifier,
     viewModel: DetailPostViewModel,
     onFABClick: () -> Unit = {},
     onBackClick: () -> Unit
@@ -64,7 +57,7 @@ fun DetailScreen(
     val commentState by viewModel.uiCommentState.collectAsStateWithLifecycle()
 
     Scaffold(
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
                 title = {
@@ -140,39 +133,58 @@ fun DetailScreen(
 
             is DetailPostUiState.Success -> {
                 val post = (state as DetailPostUiState.Success).post
-                PostContent(
-                    modifier = Modifier.padding(contentPadding),
-                    post = post
-                )
-            }
-        }
-        when (commentState) {
-            is DetailCommentUiState.Loading -> {
-                CircularProgressIndicator()
-            }
 
-            is DetailCommentUiState.Error -> {
-                val message = (commentState as DetailCommentUiState.Error).message
-                Box(
-                    Modifier
+                LazyColumn(
+                    modifier = Modifier
                         .fillMaxSize()
-                        .padding(contentPadding),
-                    contentAlignment = Alignment.Center
+                        .padding(contentPadding)
                 ) {
-                    Text(
-                        text = "Error: $message",
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-
-            is DetailCommentUiState.Success -> {
-                LazyColumn {
-                    items((commentState as DetailCommentUiState.Success).comments) { comment ->
-                        CommentContent(
+                    item {
+                        PostContent(
                             modifier = Modifier.padding(contentPadding),
-                            comment = comment
+                            post = post
                         )
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+
+                    when (commentState) {
+                        is DetailCommentUiState.Loading -> {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            }
+                        }
+
+                        is DetailCommentUiState.Error -> {
+                            val message = (commentState as DetailCommentUiState.Error).message
+                            item {
+                                Text(
+                                    text = "Error: $message",
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
+                        }
+
+                        is DetailCommentUiState.Success -> {
+                            val comments =
+                                (commentState as DetailCommentUiState.Success).comments
+                            val user = (commentState as DetailCommentUiState.Success).user
+                            items(comments) { comment ->
+                                CommentContent(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    comment = comment,
+                                    user = user
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -185,16 +197,13 @@ private fun PostContent(
     modifier: Modifier = Modifier,
     post: Post
 ) {
-    val scrollState = rememberScrollState()
-
     Surface(
         color = MaterialTheme.colorScheme.background
     ) {
         Column(
             modifier = modifier
-                .verticalScroll(scrollState)
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(8.dp),
             horizontalAlignment = Alignment.Start
         ) {
             // Author
@@ -242,37 +251,112 @@ private fun PostContent(
 }
 
 @Composable
+
 private fun CommentContent(
     modifier: Modifier = Modifier,
-    comment: Comment
+    comment: Comment,
+    user: User?
 ) {
     Surface(
         color = MaterialTheme.colorScheme.background
     ) {
-        Row(
+        Column(
             modifier = modifier
                 .padding(8.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Image(
-                painter = painterResource(R.drawable.img_profile_default),
-                contentDescription = stringResource(R.string.profile_picture),
-                modifier = Modifier
-                    .size(50.dp)
-                    .clip(CircleShape)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-
-            // Comment section
-            Row {
+            user?.displayName?.let {
                 Text(
-                    text = comment.content,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onBackground
+                    text = stringResource(R.string.by, it),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
                 )
+                Spacer(modifier = Modifier.width(6.dp))
+
+                // Comment section
+                Row {
+                    Text(
+                        text = comment.content,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun DetailScreenContentPreviewable(
+    post: Post,
+    user: User,
+    comments: List<Comment>,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+    ) {
+        // 🧱 Post section
+        item {
+            PostContent(
+                modifier = Modifier.fillMaxWidth(),
+                post = post
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+
+        // 🧱 Comment section
+        items(comments) { comment ->
+            CommentContent(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                comment = comment,
+                user = user
+            )
+        }
+    }
+}
+
+@PreviewLightDark
+@Composable
+private fun DetailScreenPreview() {
+    HexagonalGamesTheme {
+        DetailScreenContentPreviewable(
+            post = Post(
+                id = "1",
+                title = "Songs",
+                description = "Classical music from this talented singer",
+                photoUrl = null,
+                timestamp = 1,
+                author = User(
+                    id = "1",
+                    displayName = "Aretha Franklin",
+                    email = "test@mail.fr",
+                    photoUrl = null
+                )
+            ),
+            comments = listOf(
+                Comment(
+                    id = "1",
+                    content = "I love that song",
+                    timestamp = 1,
+                    author = User(
+                        id = "1",
+                        displayName = "Aretha Franklin",
+                        email = "test@mail.fr",
+                        photoUrl = null
+                    )
+                )
+            ),
+            user = User(
+                id = "1",
+                displayName = "Toto toto",
+                email = "test@mail.fr",
+                photoUrl = null
+            )
+        )
     }
 }
 
@@ -301,6 +385,7 @@ private fun PostScreenPreview() {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+
 @PreviewLightDark
 @Composable
 private fun CommentScreenPreview() {
@@ -318,6 +403,12 @@ private fun CommentScreenPreview() {
                     photoUrl = null
                 )
             ),
+            user = User(
+                id = "1",
+                displayName = "Toto toto",
+                email = "test@mail.fr",
+                photoUrl = null
+            )
         )
     }
 }

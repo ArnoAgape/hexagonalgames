@@ -173,10 +173,10 @@ private fun HomefeedCell(
             if (post.photoUrl != null) {
                 AsyncImage(
                     modifier = Modifier
-                      .padding(top = 8.dp)
-                      .fillMaxWidth()
-                      .heightIn(max = 200.dp)
-                      .aspectRatio(ratio = 16 / 9f),
+                        .padding(top = 8.dp)
+                        .fillMaxWidth()
+                        .heightIn(max = 200.dp)
+                        .aspectRatio(ratio = 16 / 9f),
                     model = post.photoUrl,
                     imageLoader = LocalContext.current.imageLoader.newBuilder()
                         .logger(DebugLogger())

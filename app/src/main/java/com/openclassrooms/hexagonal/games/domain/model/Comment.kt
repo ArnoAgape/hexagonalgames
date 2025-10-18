@@ -6,20 +6,25 @@ data class Comment (
     /**
      * Unique identifier for the Comment.
      */
-    val id: String,
+    val id: String = "",
+
+    /**
+     * Unique identifier for the id of the Post.
+     */
+    val postId: String = "",
 
     /**
      * Content of the Comment.
      */
-    val content: String,
+    val content: String = "",
 
     /**
      * Timestamp representing the creation date and time of the Post in milliseconds since epoch.
      */
-    val timestamp: Long,
+    val timestamp: Long = System.currentTimeMillis(),
 
     /**
      * User object representing the author of the Post.
      */
-    val author: User?
+    val author: User? = null
 ) : Serializable

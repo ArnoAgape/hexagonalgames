@@ -30,6 +30,7 @@ import com.openclassrooms.hexagonal.games.screen.addComment.AddCommentScreen
 import com.openclassrooms.hexagonal.games.screen.addComment.AddCommentViewModel
 import com.openclassrooms.hexagonal.games.screen.addPost.AddPostScreen
 import com.openclassrooms.hexagonal.games.screen.addPost.AddPostViewModel
+import com.openclassrooms.hexagonal.games.screen.detailPost.DetailPostUiState
 import com.openclassrooms.hexagonal.games.screen.detailPost.DetailScreen
 import com.openclassrooms.hexagonal.games.screen.detailPost.DetailPostViewModel
 import com.openclassrooms.hexagonal.games.screen.homefeed.HomefeedScreen
@@ -112,7 +113,7 @@ fun HexagonalGamesNavHost(
                     }
                 },
                 onPostClick = { post ->
-                    navHostController.navigate("detail/${post.id}")
+                    navHostController.navigate(Screen.DetailPost.createRoute(post.id))
                 }
             )
         }
@@ -135,29 +136,39 @@ fun HexagonalGamesNavHost(
                 onBackClick = { navHostController.navigateUp() }
             )
         }
-        composable(route = Screen.DetailPost.route) {
+        composable(
+            route = Screen.DetailPost.route + "/{postId}",
+            arguments = listOf(navArgument("postId") { type = NavType.StringType })
+        ) {
             val signInLauncher = rememberSignInLauncher(
                 navController = navHostController,
                 showMessage = showMessage,
-                profileViewModel = profileViewModel)
+                profileViewModel = profileViewModel
+            )
 
             val profileViewModel: ProfileViewModel = hiltViewModel()
+            val detailViewModel: DetailPostViewModel = hiltViewModel()
             DetailScreen(
                 viewModel = hiltViewModel<DetailPostViewModel>(),
                 onBackClick = { navHostController.navigateUp() },
                 onFABClick = {
-                    if (profileViewModel.isSignedIn) {
-                        navHostController.navigate(Screen.AddComment.route)
-                    } else {
-                        signInLauncher()
+                    val uiState = detailViewModel.uiPostState.value
+                    if (uiState is DetailPostUiState.Success) {
+                        val post = uiState.post
+                        if (profileViewModel.isSignedIn) {
+                            navHostController.navigate(Screen.AddComment.createRoute(post.id))
+                        } else {
+                            signInLauncher()
+                        }
                     }
                 }
             )
         }
-        composable(route = Screen.AddComment.route,
+        composable(
+            route = Screen.AddComment.route + "/{postId}",
             arguments = listOf(navArgument("postId") { type = NavType.StringType })
         ) { backStackEntry ->
-            val postId = backStackEntry.arguments?.getString("postId") ?: ""
+            val postId = checkNotNull(backStackEntry.arguments?.getString("postId"))
             AddCommentScreen(
                 viewModel = hiltViewModel<AddCommentViewModel>(),
                 postId = postId,
