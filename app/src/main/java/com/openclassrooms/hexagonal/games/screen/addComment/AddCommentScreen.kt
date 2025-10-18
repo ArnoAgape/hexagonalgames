@@ -2,7 +2,6 @@ package com.openclassrooms.hexagonal.games.screen.addComment
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -154,17 +154,15 @@ private fun CreateComment(
             modifier = modifier
                 .padding(16.dp)
                 .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(
                 modifier = Modifier
-                    .weight(1f)
                     .verticalScroll(scrollState)
             ) {
                 OutlinedTextField(
                     modifier = Modifier
-                        .padding(top = 16.dp)
+                        .padding(top = 8.dp)
                         .fillMaxWidth()
                         .onFocusChanged { focusState ->
                             if (wasFocused && !focusState.isFocused) {
@@ -176,7 +174,10 @@ private fun CreateComment(
                     isError = showCommentError,
                     onValueChange = { onContentChanged(it) },
                     label = { Text(stringResource(id = R.string.hint_comment)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        capitalization = KeyboardCapitalization.Sentences
+                    )
                 )
 
                 if (showCommentError) {
@@ -188,6 +189,9 @@ private fun CreateComment(
                     )
                 }
             }
+
+            Spacer(Modifier.height(10.dp))
+
             Button(
                 onClick = onSaveClicked,
                 enabled = isCommentValid && !uiState.isSaving
