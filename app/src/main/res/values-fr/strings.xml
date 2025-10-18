@@ -10,11 +10,13 @@
   <string name="error">Erreur</string>
   <string name="error_generic">Une erreur est survenue</string>
   <string name="no_network">Pas de réseau</string>
+  <string name="no_posts">Aucune publication</string>
   <string name="loading">Chargement…</string>
 
   <string name="user_name">Nom</string>
   <string name="user_email">E-mail</string>
   <string name="user_picture">Avatar</string>
+  <string name="title_comments">Commentaires :</string>
 
   <string name="homefeed_fragment_label">Home</string>
   <string name="add_fragment_label">Ajout d\'une publication</string>
@@ -39,6 +41,7 @@
   <string name="profile_picture">Your profile picture</string>
   <string name="error_title">Titre non valide</string>
   <string name="error_comment">Commentaire non valide</string>
+  <string name="no_comment">Aucun commentaire trouvé</string>
   <string name="error_description">Descrition non valide</string>
   <string name="error_photo">Photo non valide</string>
   <string name="publishing">Publication en cours…</string>

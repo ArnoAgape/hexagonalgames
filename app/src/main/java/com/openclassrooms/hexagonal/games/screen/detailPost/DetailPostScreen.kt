@@ -1,6 +1,6 @@
 package com.openclassrooms.hexagonal.games.screen.detailPost
 
-import androidx.compose.foundation.layout.Arrangement
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -55,9 +56,10 @@ fun DetailScreen(
 ) {
     val state by viewModel.uiPostState.collectAsStateWithLifecycle()
     val commentState by viewModel.uiCommentState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier,
         topBar = {
             TopAppBar(
                 title = {
@@ -117,17 +119,13 @@ fun DetailScreen(
             }
 
             is DetailPostUiState.Error -> {
-                val message = (state as DetailPostUiState.Error).message
                 Box(
                     Modifier
                         .fillMaxSize()
                         .padding(contentPadding),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Error: $message",
-                        color = MaterialTheme.colorScheme.error
-                    )
+                    Toast.makeText(context, context.getString(R.string.no_posts), Toast.LENGTH_SHORT)
                 }
             }
 
@@ -141,7 +139,6 @@ fun DetailScreen(
                 ) {
                     item {
                         PostContent(
-                            modifier = Modifier.padding(contentPadding),
                             post = post
                         )
                         Spacer(modifier = Modifier.height(24.dp))
@@ -161,11 +158,9 @@ fun DetailScreen(
                         }
 
                         is DetailCommentUiState.Error -> {
-                            val message = (commentState as DetailCommentUiState.Error).message
                             item {
                                 Text(
-                                    text = "Error: $message",
-                                    color = MaterialTheme.colorScheme.error,
+                                    text = stringResource(R.string.no_comment),
                                     modifier = Modifier.padding(16.dp)
                                 )
                             }
@@ -178,8 +173,7 @@ fun DetailScreen(
                             items(comments) { comment ->
                                 CommentContent(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                        .fillMaxWidth(),
                                     comment = comment,
                                     user = user
                                 )
@@ -194,17 +188,13 @@ fun DetailScreen(
 
 @Composable
 private fun PostContent(
-    modifier: Modifier = Modifier,
     post: Post
 ) {
-    Surface(
-        color = MaterialTheme.colorScheme.background
+    ElevatedCard(
+        modifier = Modifier
     ) {
         Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(8.dp),
-            horizontalAlignment = Alignment.Start
+            modifier = Modifier.padding(16.dp)
         ) {
             // Author
             post.author?.displayName?.let {
@@ -231,8 +221,8 @@ private fun PostContent(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(Modifier.height(16.dp))
             }
+            Spacer(Modifier.height(8.dp))
 
             // Photo
             post.photoUrl?.let { url ->
@@ -262,16 +252,24 @@ private fun CommentContent(
     ) {
         Column(
             modifier = modifier
-                .padding(8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+                .padding(16.dp)
         ) {
+            Text(
+                text = stringResource(R.string.title_comments),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             user?.displayName?.let {
                 Text(
                     text = stringResource(R.string.by, it),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
-                Spacer(modifier = Modifier.width(6.dp))
+
+                Spacer(modifier = Modifier.height(6.dp))
 
                 // Comment section
                 Row {
@@ -300,7 +298,6 @@ private fun DetailScreenContentPreviewable(
         // 🧱 Post section
         item {
             PostContent(
-                modifier = Modifier.fillMaxWidth(),
                 post = post
             )
             Spacer(modifier = Modifier.height(24.dp))
@@ -366,7 +363,6 @@ private fun DetailScreenPreview() {
 private fun PostScreenPreview() {
     HexagonalGamesTheme {
         PostContent(
-            modifier = Modifier.fillMaxWidth(),
             post = Post(
                 id = "1",
                 title = "Songs",
