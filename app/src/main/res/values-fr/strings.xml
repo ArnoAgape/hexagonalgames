@@ -13,6 +13,7 @@
   <string name="error_no_account_comment">Un compte est nécessaire pour ajouter un commentaire</string>
   <string name="no_network">Pas de réseau</string>
   <string name="no_posts">Aucune publication</string>
+  <string name="no_post">Aucune publication</string>
   <string name="loading">Chargement…</string>
 
   <string name="user_name">Nom</string>

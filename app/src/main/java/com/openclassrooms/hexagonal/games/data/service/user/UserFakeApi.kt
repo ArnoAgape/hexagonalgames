@@ -28,17 +28,17 @@ class UserFakeApi : UserApi {
     override fun getCurrentUser(): User? = _currentUser.value
 
     override suspend fun ensureUserInFirestore(): Result<Unit> {
-        val user = _currentUser.value ?: return Result.failure(Exception("Utilisateur non connecté"))
+        val user = _currentUser.value ?: return Result.failure(Exception("User not signed in"))
         return try {
             if (users.none { it.id == user.id }) {
                 users.add(user)
-                Log.d("UserFakeApi", "Fake user ajouté : ${user.displayName}")
+                Log.d("UserFakeApi", "Fake user added : ${user.displayName}")
             } else {
-                Log.d("UserFakeApi", "Fake user déjà existant : ${user.displayName}")
+                Log.d("UserFakeApi", "Fake user already exists : ${user.displayName}")
             }
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e("UserFakeApi", "Erreur lors de l'ajout du fake user", e)
+            Log.e("UserFakeApi", "Error while adding the fake user", e)
             Result.failure(e)
         }
     }

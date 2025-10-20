@@ -1,7 +1,6 @@
 package com.openclassrooms.hexagonal.games.screen.detailPost
 
 import com.openclassrooms.hexagonal.games.domain.model.Post
-import com.openclassrooms.hexagonal.games.screen.homefeed.PostUiState
 
 sealed class DetailPostUiState {
     object Loading : DetailPostUiState()

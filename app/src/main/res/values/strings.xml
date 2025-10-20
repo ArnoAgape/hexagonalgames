@@ -13,6 +13,7 @@
   <string name="error_no_account_comment">An account is mandatory in order to add a comment</string>
   <string name="no_network">No network</string>
   <string name="no_posts">No posts</string>
+  <string name="no_post">No post</string>
   <string name="loading">Loading…</string>
 
   <string name="user_name">Name</string>

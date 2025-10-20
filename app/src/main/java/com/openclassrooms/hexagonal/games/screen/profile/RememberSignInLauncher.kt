@@ -30,11 +30,11 @@ fun rememberSignInLauncher(
 
         if (result.resultCode == Activity.RESULT_OK) {
             val user = firebaseAuth.currentUser
-            Log.d("Auth", "Connexion réussie : ${user?.email ?: "Utilisateur inconnu"}")
+            Log.d("Auth", "Successfully connected: ${user?.email ?: "Unknown user"}")
 
             profileViewModel.syncUserWithFirestore()
 
-            showMessage("Connexion réussie !")
+            showMessage("Connection successful")
 
             navController.navigate(Screen.Homefeed.route) {
                 popUpTo(navController.graph.startDestinationId) {
@@ -45,22 +45,22 @@ fun rememberSignInLauncher(
         } else {
             // Failed or canceled by the user
             if (response == null) {
-                Log.w("Auth", "Connexion annulée par l'utilisateur.")
-                showMessage("Connexion annulée.")
+                Log.w("Auth", "Connection canceled by user.")
+                showMessage("Connection canceled.")
             } else {
                 // Error
                 val errorCode = response.error?.errorCode
-                Log.w("Auth", "Échec de la connexion. Code d'erreur : $errorCode", response.error)
-                showMessage("Échec de la connexion. Veuillez réessayer.")
+                Log.w("Auth", "Connection failed. Error code: $errorCode", response.error)
+                showMessage("Connection failed. Please try again.")
             }
         }
     }
 
     val providers = remember { listOf(AuthUI.IdpConfig.EmailBuilder().build()) }
-    val signInIntent = remember(providers) { // Recréer si `providers` change (peu probable ici)
+    val signInIntent = remember(providers) {
         AuthUI.getInstance()
             .createSignInIntentBuilder()
-            .setTheme(R.style.Base_Theme_HexagonalGames) // Assurez-vous que ce style est bien défini
+            .setTheme(R.style.Base_Theme_HexagonalGames)
             .setAvailableProviders(providers)
             .build()
     }

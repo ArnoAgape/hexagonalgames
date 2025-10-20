@@ -127,13 +127,7 @@ fun HexagonalGamesNavHost(
             route = Screen.DetailPost.route + "/{postId}",
             arguments = listOf(navArgument("postId") { type = NavType.StringType })
         ) {
-            val signInLauncher = rememberSignInLauncher(
-                navController = navHostController,
-                showMessage = showMessage,
-                profileViewModel = profileViewModel
-            )
 
-            val profileViewModel: ProfileViewModel = hiltViewModel()
             val detailViewModel: DetailPostViewModel = hiltViewModel()
             DetailScreen(
                 viewModel = hiltViewModel<DetailPostViewModel>(),

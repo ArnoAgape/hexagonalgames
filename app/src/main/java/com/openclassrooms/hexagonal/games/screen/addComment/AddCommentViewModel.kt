@@ -108,18 +108,6 @@ class AddCommentViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Verifies mandatory fields of the comment
-     * and returns a corresponding CommentError if so.
-     *
-     * @return A CommentError.EmptyComment if comment is empty, null otherwise.
-     */
-    private fun verifyComment(comment: Comment = _comment.value): FormError? {
-        return when {
-            comment.content.isBlank() -> FormError.CommentError
-            else -> null
-        }
-    }
     fun onSaveClicked(postId: String) {
         _error.value = null
         if (!isCommentValid.value) {
@@ -128,6 +116,7 @@ class AddCommentViewModel @Inject constructor(
             addComment(postId)
         }
     }
+
     fun resetError() {
         _uiState.update { it.copy(error = null) }
     }

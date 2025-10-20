@@ -30,19 +30,18 @@ class FirebaseUserApi : UserApi {
     }
 
     override suspend fun ensureUserInFirestore(): Result<Unit> {
-        val firebaseUser = auth.currentUser ?: return Result.failure(Exception("Utilisateur non connecté"))
+        val firebaseUser = auth.currentUser ?: return Result.failure(Exception("User not signed in"))
         val user = firebaseUser.toDomain()
         return try {
             val doc = usersCollection.document(user.id).get().await()
             if (!doc.exists()) {
                 usersCollection.document(user.id).set(user).await()
-                Log.d("UserRepository", "Document Firestore créé pour ${user.email}")
+                Log.d("UserRepository", "Document Firestore created for ${user.email}")
             } else {
-                Log.d("UserRepository", "Document Firestore déjà existant pour ${user.email}")
+                Log.d("UserRepository", "Document Firestore already exists for ${user.email}")
             }
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e("UserRepository", "Erreur Firestore lors de ensureUserInFirestore", e)
             Result.failure(e)
         }
     }
@@ -67,7 +66,7 @@ class FirebaseUserApi : UserApi {
 
     override suspend fun deleteUser(): Result<Unit> {
         return try {
-            val currentUser = auth.currentUser ?: return Result.failure(Exception("Aucun utilisateur connecté"))
+            val currentUser = auth.currentUser ?: return Result.failure(Exception("No user signed in"))
             usersCollection.document(currentUser.uid).delete().await()
             currentUser.delete().await()
             Result.success(Unit)
