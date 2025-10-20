@@ -31,7 +31,7 @@ class HomefeedViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<PostUiState>(PostUiState.Loading)
     val uiState: StateFlow<PostUiState> = _uiState
 
-    val isUserSignedIn: StateFlow<Boolean> =
+    val isUserSignedIn =
         userRepository.isUserSignedIn()
             .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 

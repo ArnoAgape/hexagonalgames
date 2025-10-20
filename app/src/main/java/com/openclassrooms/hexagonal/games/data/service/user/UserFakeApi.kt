@@ -5,6 +5,8 @@ import com.openclassrooms.hexagonal.games.domain.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Fake API simulant la logique de FirebaseUserApi pour les tests ou le mode hors-ligne.
@@ -19,6 +21,9 @@ class UserFakeApi : UserApi {
 
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser = _currentUser.asStateFlow()
+
+    private val _isUserSignedIn = MutableStateFlow(false)
+    val isUserSignedIn: StateFlow<Boolean> = _isUserSignedIn.asStateFlow()
 
     override fun getCurrentUser(): User? = _currentUser.value
 
@@ -47,7 +52,7 @@ class UserFakeApi : UserApi {
         }
     }
 
-    override fun isUserSignedIn(): Boolean = _currentUser.value != null
+    override fun isUserSignedIn(): Flow<Boolean> = isUserSignedIn
 
     override suspend fun deleteUser(): Result<Unit> {
         val user = _currentUser.value ?: return Result.failure(Exception("Aucun utilisateur connecté"))

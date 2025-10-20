@@ -27,7 +27,7 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    val isSignedIn: StateFlow<Boolean> =
+    val isSignedIn =
         userRepository.isUserSignedIn()
             .stateIn(
                 scope = viewModelScope,

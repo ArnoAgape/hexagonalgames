@@ -42,7 +42,7 @@ class DetailPostViewModel @Inject constructor(
     private var postJob: Job? = null
     private var commentJob: Job? = null
 
-    val isUserSignedIn: StateFlow<Boolean> =
+    val isUserSignedIn =
         userRepository.isUserSignedIn()
             .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
@@ -77,6 +77,7 @@ class DetailPostViewModel @Inject constructor(
                 }
         }
     }
+
     private fun observeComments(postId: String, user: User?) {
         commentJob?.cancel()
         commentJob = viewModelScope.launch {
