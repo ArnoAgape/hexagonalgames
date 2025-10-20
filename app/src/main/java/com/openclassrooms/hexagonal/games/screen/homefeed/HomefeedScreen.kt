@@ -59,7 +59,6 @@ import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomefeedScreen(
-    modifier: Modifier = Modifier,
     homeViewModel: HomefeedViewModel,
     onPostClick: (Post) -> Unit = {},
     onSettingsClick: () -> Unit = {},
@@ -73,7 +72,7 @@ fun HomefeedScreen(
     val refreshState = rememberPullToRefreshState()
 
     Scaffold(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         topBar = {
@@ -126,7 +125,7 @@ fun HomefeedScreen(
                         onFABClick()
                     } else {
                         Toast.makeText(
-                            context, context.getString(R.string.error_no_account),
+                            context, context.getString(R.string.error_no_account_post),
                             Toast.LENGTH_SHORT
                         ).show()
                     }

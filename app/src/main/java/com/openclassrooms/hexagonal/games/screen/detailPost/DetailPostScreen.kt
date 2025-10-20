@@ -1,6 +1,7 @@
 package com.openclassrooms.hexagonal.games.screen.detailPost
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,11 +25,15 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults.contentPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,10 +41,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.domain.model.Comment
@@ -55,10 +63,21 @@ fun DetailScreen(
 ) {
     val state by viewModel.uiPostState.collectAsStateWithLifecycle()
     val commentState by viewModel.uiCommentState.collectAsStateWithLifecycle()
+    val isSignedIn by viewModel.isUserSignedIn.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val refreshState = rememberPullToRefreshState()
+
+    LaunchedEffect(state) {
+        if (state is DetailPostUiState.Error.Network) {
+            Toast.makeText(context, context.getString(R.string.no_network), Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     Scaffold(
-        modifier = Modifier,
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         topBar = {
             TopAppBar(
                 title = {
@@ -72,13 +91,11 @@ fun DetailScreen(
                             )
                         }
 
-                        is DetailPostUiState.Loading -> {
-                            Text(stringResource(R.string.loading))
-                        }
-
                         is DetailPostUiState.Error -> {
                             Text(stringResource(R.string.error))
                         }
+
+                        else -> {}
                     }
                 },
                 navigationIcon = {
@@ -95,7 +112,14 @@ fun DetailScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    onFABClick()
+                    if (isSignedIn) {
+                        onFABClick()
+                    } else {
+                        Toast.makeText(
+                            context, context.getString(R.string.error_no_account_comment),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             ) {
                 Icon(
@@ -105,76 +129,104 @@ fun DetailScreen(
             }
         }
     ) { contentPadding ->
-        when (state) {
-            is DetailPostUiState.Loading -> {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
+        PullToRefreshBox(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding),
+            state = refreshState,
+            isRefreshing = state is DetailPostUiState.Loading,
+            onRefresh = { viewModel.refreshData() }
+        ) {
+            when (state) {
+                is DetailPostUiState.Success -> {
+                    val post = (state as DetailPostUiState.Success).post
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                    ) {
+                        item {
+                            PostContent(post = post)
+                        }
 
-            is DetailPostUiState.Error -> {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Toast.makeText(context, context.getString(R.string.no_posts), Toast.LENGTH_SHORT)
-                }
-            }
+                        when (commentState) {
+                            is DetailCommentUiState.Success -> {
+                                val comments =
+                                    (commentState as DetailCommentUiState.Success).comments
+                                val user = (commentState as DetailCommentUiState.Success).user
+                                if (comments.isEmpty()) {
+                                    item {
+                                        Text(
+                                            text = stringResource(R.string.no_comment),
+                                            modifier = Modifier
+                                                .padding(16.dp)
+                                                .fillMaxWidth(),
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                } else {
+                                    items(comments) { comment ->
+                                        CommentContent(
+                                            modifier = Modifier
+                                                .fillMaxWidth(),
+                                            comment = comment,
+                                            user = user
+                                        )
+                                    }
+                                }
+                            }
 
-            is DetailPostUiState.Success -> {
-                val post = (state as DetailPostUiState.Success).post
+                            is DetailCommentUiState.Error -> {
+                                item {
+                                    Text(
+                                        text = stringResource(R.string.no_comment),
+                                        modifier = Modifier
+                                            .padding(16.dp)
+                                            .fillMaxWidth(),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
 
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding)
-                ) {
-                    item {
-                        PostContent(post = post)
-                    }
-
-                    when (commentState) {
-                        is DetailCommentUiState.Loading -> {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator()
+                            else -> {
+                                item {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp)
+                                            .wrapContentWidth(Alignment.CenterHorizontally)
+                                    )
                                 }
                             }
                         }
+                    }
+                }
 
-                        is DetailCommentUiState.Error -> {
-                            item {
-                                Text(
-                                    text = stringResource(R.string.no_comment),
-                                    modifier = Modifier.padding(16.dp)
-                                )
-                            }
+                is DetailPostUiState.Error -> {
+                    when (val errorState = state as DetailPostUiState.Error) {
+                        is DetailPostUiState.Error.Network -> {
+                            Toast.makeText(context, context.getString(R.string.no_network), Toast.LENGTH_SHORT).show()
                         }
 
-                        is DetailCommentUiState.Success -> {
-                            val comments =
-                                (commentState as DetailCommentUiState.Success).comments
-                            val user = (commentState as DetailCommentUiState.Success).user
-                            items(comments) { comment ->
-                                CommentContent(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    comment = comment,
-                                    user = user
-                                )
-                            }
+                        is DetailPostUiState.Error.Empty -> {
+                            Text(
+                                text = stringResource(R.string.no_posts),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
                         }
+
+                        is DetailPostUiState.Error.Generic -> {
+                            Toast.makeText(context, errorState.message, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+
+                is DetailPostUiState.Loading -> {
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
                     }
                 }
             }

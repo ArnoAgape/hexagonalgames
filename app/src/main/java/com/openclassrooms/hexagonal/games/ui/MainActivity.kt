@@ -142,11 +142,7 @@ fun HexagonalGamesNavHost(
                     val uiState = detailViewModel.uiPostState.value
                     if (uiState is DetailPostUiState.Success) {
                         val post = uiState.post
-                        if (profileViewModel.isSignedIn.value) {
-                            navHostController.navigate(Screen.AddComment.createRoute(post.id))
-                        } else {
-                            signInLauncher()
-                        }
+                        navHostController.navigate(Screen.AddComment.createRoute(post.id))
                     }
                 }
             )

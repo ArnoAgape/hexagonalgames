@@ -9,7 +9,8 @@
   <string name="unknown_error">Une erreur inconnue s\'est produite.</string>
   <string name="error">Erreur</string>
   <string name="error_generic">Une erreur est survenue</string>
-  <string name="error_no_account">Un compte est nécessaire pour ajouter une publication</string>
+  <string name="error_no_account_post">Un compte est nécessaire pour ajouter une publication</string>
+  <string name="error_no_account_comment">Un compte est nécessaire pour ajouter un commentaire</string>
   <string name="no_network">Pas de réseau</string>
   <string name="no_posts">Aucune publication</string>
   <string name="loading">Chargement…</string>
