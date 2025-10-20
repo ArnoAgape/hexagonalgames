@@ -289,7 +289,7 @@ private fun DetailScreenContentPreviewable(
         modifier = modifier
             .fillMaxSize()
     ) {
-        // 🧱 Post section
+        // Post section
         item {
             PostContent(
                 post = post
@@ -297,7 +297,7 @@ private fun DetailScreenContentPreviewable(
             Spacer(modifier = Modifier.height(24.dp))
         }
 
-        // 🧱 Comment section
+        // Comment section
         items(comments) { comment ->
             CommentContent(
                 modifier = Modifier

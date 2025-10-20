@@ -9,6 +9,7 @@
   <string name="unknown_error">An unknown error occurred.</string>
   <string name="error">Error</string>
   <string name="error_generic">An issue occurred</string>
+  <string name="error_no_account">An account is mandatory in order to add a post</string>
   <string name="no_network">No network</string>
   <string name="no_posts">No posts</string>
   <string name="loading">Loading…</string>

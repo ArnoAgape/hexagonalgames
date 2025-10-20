@@ -7,8 +7,10 @@ import com.openclassrooms.hexagonal.games.domain.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @HiltViewModel
@@ -25,8 +27,13 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
-    val isSignedIn: Boolean
-        get() = userRepository.isUserSignedIn()
+    val isSignedIn: StateFlow<Boolean> =
+        userRepository.isUserSignedIn()
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = false
+            )
 
     fun signOut() {
         val result = userRepository.signOut()

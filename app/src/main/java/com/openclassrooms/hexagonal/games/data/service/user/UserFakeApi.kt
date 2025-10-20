@@ -11,15 +11,14 @@ import kotlinx.coroutines.delay
  */
 class UserFakeApi : UserApi {
 
-    private val _currentUser = MutableStateFlow<User?>(null)
-    val currentUser = _currentUser.asStateFlow()
-
-    // Liste de faux utilisateurs stockés localement
     private val users = mutableListOf(
         User("1", "Gerry", "gerry@example.com"),
         User("2", "Brenton", "brenton@example.com"),
         User("3", "Wally", "wally@example.com")
     )
+
+    private val _currentUser = MutableStateFlow<User?>(null)
+    val currentUser = _currentUser.asStateFlow()
 
     override fun getCurrentUser(): User? = _currentUser.value
 
@@ -28,13 +27,13 @@ class UserFakeApi : UserApi {
         return try {
             if (users.none { it.id == user.id }) {
                 users.add(user)
-                Log.d("UserFakeApi", "✅ Fake user ajouté : ${user.displayName}")
+                Log.d("UserFakeApi", "Fake user ajouté : ${user.displayName}")
             } else {
-                Log.d("UserFakeApi", "ℹ️ Fake user déjà existant : ${user.displayName}")
+                Log.d("UserFakeApi", "Fake user déjà existant : ${user.displayName}")
             }
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e("UserFakeApi", "❌ Erreur lors de l'ajout du fake user", e)
+            Log.e("UserFakeApi", "Erreur lors de l'ajout du fake user", e)
             Result.failure(e)
         }
     }
@@ -55,14 +54,13 @@ class UserFakeApi : UserApi {
         return try {
             users.removeIf { it.id == user.id }
             _currentUser.value = null
-            Log.d("UserFakeApi", "✅ Fake user supprimé : ${user.displayName}")
+            Log.d("UserFakeApi", "Fake user supprimé : ${user.displayName}")
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    // Fonction utilitaire pour les tests : connecter un utilisateur fake
     suspend fun signInFakeUser(userId: String) {
         val user = users.find { it.id == userId }
         delay(300)

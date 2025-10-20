@@ -1,15 +1,20 @@
 package com.openclassrooms.hexagonal.games.screen.homefeed
 
+import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
@@ -25,17 +30,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,9 +67,15 @@ fun HomefeedScreen(
     onProfileClick: () -> Unit = {}
 ) {
     var showMenu by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
+    val isSignedIn by homeViewModel.isUserSignedIn.collectAsStateWithLifecycle()
+    val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
+    val refreshState = rememberPullToRefreshState()
 
     Scaffold(
-        modifier = modifier,
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background),
         topBar = {
             TopAppBar(
                 title = {
@@ -107,7 +122,14 @@ fun HomefeedScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    onFABClick()
+                    if (isSignedIn) {
+                        onFABClick()
+                    } else {
+                        Toast.makeText(
+                            context, context.getString(R.string.error_no_account),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
             ) {
                 Icon(
@@ -117,15 +139,58 @@ fun HomefeedScreen(
             }
         }
     ) { contentPadding ->
-        val posts by homeViewModel.posts.collectAsStateWithLifecycle()
+        PullToRefreshBox(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(contentPadding),
+            state = refreshState,
+            isRefreshing = uiState is PostUiState.Loading,
+            onRefresh = { homeViewModel.refreshPosts() }
+        ) {
+            when (uiState) {
+                is PostUiState.Success ->
+                    HomefeedList(
+                        posts = (uiState as PostUiState.Success).posts,
+                        onPostClick = onPostClick
+                    )
 
-        HomefeedList(
-            modifier = modifier.padding(contentPadding),
-            posts = posts,
-            onPostClick = onPostClick
-        )
+                is PostUiState.Error.Empty -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.Top,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(R.string.no_posts),
+                            modifier = Modifier.fillMaxSize(),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
+                }
+
+                is PostUiState.Error.Network -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.Top,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Toast.makeText(
+                            context, context.getString(R.string.no_network),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+
+                else -> {}
+            }
+        }
     }
 }
+
 
 @Composable
 private fun HomefeedList(
@@ -210,7 +275,7 @@ private fun HomefeedCellPreview() {
                 timestamp = 1,
                 author = User(
                     id = "1",
-                    displayName = "displayname",
+                    displayName = "displayName",
                     email = "test@mail.fr",
                     photoUrl = null
                 )
@@ -233,7 +298,7 @@ private fun HomefeedCellImagePreview() {
                 timestamp = 1,
                 author = User(
                     id = "1",
-                    displayName = "displayname",
+                    displayName = "displayName",
                     email = "test@mail.fr",
                     photoUrl = null
                 )
