@@ -1,5 +1,6 @@
 package com.openclassrooms.hexagonal.games.di
 
+import com.google.firebase.Firebase
 import com.openclassrooms.hexagonal.games.data.service.comment.CommentApi
 import com.openclassrooms.hexagonal.games.data.service.comment.FirebaseCommentApi
 import com.openclassrooms.hexagonal.games.data.service.post.FirebasePostApi
@@ -29,9 +30,7 @@ class AppModule {
    */
   @Provides
   @Singleton
-  fun providePostApi(): PostApi {
-    return FirebasePostApi()
-  }
+  fun providePostApi(firebasePostApi: FirebasePostApi): PostApi = firebasePostApi
 
   @Provides
   @Singleton

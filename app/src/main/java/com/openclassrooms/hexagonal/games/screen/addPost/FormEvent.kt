@@ -44,9 +44,8 @@ sealed class FormError(@StringRes val messageRes: Int) {
   data object TitleError : FormError(R.string.error_title)
   data object DescriptionError : FormError(R.string.error_description)
   data object PhotoError : FormError(R.string.error_photo)
-
   data object GenericError : FormError(R.string.error_generic)
-
+  data object NetworkError : FormError(R.string.no_network)
   data object CommentError : FormError(R.string.error_comment)
   
 }

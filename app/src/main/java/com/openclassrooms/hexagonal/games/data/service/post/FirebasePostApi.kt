@@ -4,11 +4,15 @@ import android.util.Log
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.openclassrooms.hexagonal.games.domain.model.Post
+import com.openclassrooms.hexagonal.games.utils.NetworkUtils
+import jakarta.inject.Inject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
+import java.io.IOException
 
-class FirebasePostApi : PostApi {
+class FirebasePostApi @Inject constructor(private val networkUtils: NetworkUtils) : PostApi {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val postsCollection = firestore.collection("posts")
@@ -29,16 +33,22 @@ class FirebasePostApi : PostApi {
         awaitClose { listener.remove() }
     }
 
-    override fun addPost(post: Post) {
-        postsCollection
-            .document(post.id)
-            .set(post)
-            .addOnSuccessListener {
-                Log.d("FirebasePostApi", "Post added successfully: ${post.title}")
-            }
-            .addOnFailureListener {
-                Log.e("FirebasePostApi", "Error while adding the post", it)
-            }
+    override suspend fun addPost(post: Post) {
+        if (!networkUtils.isNetworkAvailable()) {
+            throw IOException("No internet connection")
+        }
+
+        try {
+            postsCollection
+                .document(post.id)
+                .set(post)
+                .await()
+            Log.d("FirebasePostApi", "Post added successfully: ${post.title}")
+
+        } catch (e: Exception) {
+            Log.e("FirebasePostApi", "Error while adding the post", e)
+            throw e
+        }
     }
 
     override fun getCurrentPost(): Flow<Post> = callbackFlow {

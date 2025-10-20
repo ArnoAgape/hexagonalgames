@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -47,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
@@ -72,10 +75,13 @@ fun AddPostScreen(
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
             val message = when (error) {
-                is FormError.GenericError -> context.getString(R.string.error_generic)
-                else -> context.getString(error.messageRes)
+                is FormError.GenericError -> R.string.error_generic
+                is FormError.NetworkError -> R.string.no_network
+
+                else -> error.messageRes
             }
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            viewModel.resetError()
         }
     }
 
@@ -103,21 +109,19 @@ fun AddPostScreen(
         }
     ) { contentPadding ->
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            CreatePost(
-                modifier = Modifier.padding(contentPadding),
-                title = post.title,
-                onTitleChanged = { viewModel.onAction(FormEvent.TitleChanged(it)) },
-                description = post.description,
-                onDescriptionChanged = { viewModel.onAction(FormEvent.DescriptionChanged(it)) },
-                photoUrl = post.photoUrl,
-                onPhotoSelected = { viewModel.onAction(FormEvent.PhotoChanged(it)) },
-                onSaveClicked = { viewModel.onSaveClicked() },
-                error = uiState.error,
-                isPostValid = isPostValid,
-                uiState = uiState
-            )
-        }
+        CreatePost(
+            modifier = Modifier.padding(contentPadding),
+            title = post.title,
+            onTitleChanged = { viewModel.onAction(FormEvent.TitleChanged(it)) },
+            description = post.description,
+            onDescriptionChanged = { viewModel.onAction(FormEvent.DescriptionChanged(it)) },
+            photoUrl = post.photoUrl,
+            onPhotoSelected = { viewModel.onAction(FormEvent.PhotoChanged(it)) },
+            onSaveClicked = { viewModel.onSaveClicked() },
+            error = uiState.error,
+            isPostValid = isPostValid,
+            uiState = uiState
+        )
 
         if (uiState.isSaving) {
             Box(
@@ -160,9 +164,8 @@ private fun CreatePost(
     var descriptionWasFocused by remember { mutableStateOf(false) }
 
     val scrollState = rememberScrollState()
-    val selectedImageUri = remember(photoUrl) {
-        photoUrl?.toUri()
-    }
+    val selectedImageUri = photoUrl?.toUri()
+
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -170,11 +173,17 @@ private fun CreatePost(
         onPhotoSelected(uri)
     }
 
+    val showError = when {
+        error is FormError.TitleError && titleFieldHasBeenTouched -> true
+        error is FormError.DescriptionError && descriptionFieldTouched -> true
+        error is FormError.PhotoError -> true
+        else -> false
+    }
+
     val showTitleError =
         (titleFieldHasBeenTouched) && error is FormError.TitleError
     val showDescriptionError =
         (descriptionFieldTouched) && error is FormError.DescriptionError
-    val showPhotoError = error is FormError.PhotoError
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -183,6 +192,8 @@ private fun CreatePost(
         Column(
             modifier = modifier
                 .padding(16.dp)
+                .navigationBarsPadding()
+                .imePadding()
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
@@ -192,6 +203,7 @@ private fun CreatePost(
                     .weight(1f)
                     .verticalScroll(scrollState)
             ) {
+                // title
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 16.dp)
@@ -206,19 +218,25 @@ private fun CreatePost(
                     isError = showTitleError,
                     onValueChange = { onTitleChanged(it) },
                     label = { Text(stringResource(id = R.string.hint_title)) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        capitalization = KeyboardCapitalization.Sentences
+                    ),
                     singleLine = true
                 )
 
-                if (showTitleError) {
-                    Text(
-                        text = stringResource(id = error.messageRes),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                if (showError) {
+                    error?.let {
+                        Text(
+                            text = stringResource(id = error.messageRes),
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
 
+                // description field
                 if (description != null) {
                     OutlinedTextField(
                         modifier = Modifier
@@ -234,16 +252,10 @@ private fun CreatePost(
                         isError = showDescriptionError,
                         onValueChange = { onDescriptionChanged(it) },
                         label = { Text(stringResource(id = R.string.hint_description)) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-                    )
-                }
-
-                if (showDescriptionError) {
-                    Text(
-                        text = stringResource(id = error.messageRes),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth()
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            capitalization = KeyboardCapitalization.Sentences
+                        )
                     )
                 }
 
@@ -281,14 +293,6 @@ private fun CreatePost(
                             else
                                 stringResource(R.string.change_photo),
                             color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                    if (showPhotoError) {
-                        Text(
-                            text = stringResource(id = error.messageRes),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }

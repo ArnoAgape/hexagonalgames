@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.openclassrooms.hexagonal.games.data.repository.PostRepository
 import com.openclassrooms.hexagonal.games.data.repository.UserRepository
 import com.openclassrooms.hexagonal.games.domain.model.Post
+import com.openclassrooms.hexagonal.games.utils.NetworkUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,6 +16,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
 import java.util.UUID
 import javax.inject.Inject
 
@@ -25,7 +27,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AddPostViewModel @Inject constructor(
     private val postRepository: PostRepository,
-    userRepository: UserRepository
+    userRepository: UserRepository,
+    private val networkUtils: NetworkUtils
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddPostUiState.initial())
@@ -96,18 +99,26 @@ class AddPostViewModel @Inject constructor(
      */
     fun addPost() {
         viewModelScope.launch {
+            if (!networkUtils.isNetworkAvailable()) {
+                _uiState.update { it.copy(isSaving = false, error = FormError.NetworkError) }
+                return@launch
+            }
+
             _uiState.update { it.copy(isSaving = true, isSuccess = false, error = null) }
 
             try {
-                // 🔹 Ajoute l’auteur au post avant l’envoi
+                // Add the author to the post
                 val postToSave = _post.value.copy(author = _user.value)
-
-                // 🔹 Appel au repository
+                // Call the repository to add the post
                 postRepository.addPost(postToSave)
 
                 _uiState.update { it.copy(isSaving = false, isSuccess = true) }
 
                 Log.d("AddPostViewModel", "Post added successfully: $postToSave")
+
+            } catch (e: IOException) {
+                Log.e("AddPostViewModel", "Network error", e)
+                _uiState.update { it.copy(isSaving = false, error = FormError.NetworkError) }
 
             } catch (e: Exception) {
                 Log.e("AddPostViewModel", "Error while adding the post", e)
@@ -141,4 +152,9 @@ class AddPostViewModel @Inject constructor(
             addPost()
         }
     }
+
+    fun resetError() {
+        _uiState.update { it.copy(error = null) }
+    }
+
 }

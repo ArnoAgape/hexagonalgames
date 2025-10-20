@@ -66,7 +66,7 @@ class PostFakeApi : PostApi {
     override fun getPostsOrderByCreationDateDesc(): Flow<List<Post>> =
         posts
 
-    override fun addPost(post: Post) {
+    override suspend fun addPost(post: Post) {
         posts.value.add(0, post)
     }
 
