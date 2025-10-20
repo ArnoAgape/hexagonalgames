@@ -2,12 +2,15 @@ package com.openclassrooms.hexagonal.games.screen.addComment
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -64,10 +67,13 @@ fun AddCommentScreen(
     LaunchedEffect(uiState.error) {
         uiState.error?.let { error ->
             val message = when (error) {
-                is FormError.GenericError -> context.getString(R.string.error_generic)
-                else -> context.getString(error.messageRes)
+                is FormError.GenericError -> R.string.error_generic
+                is FormError.NetworkError -> R.string.no_network
+
+                else -> error.messageRes
             }
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            viewModel.resetError()
         }
     }
 
@@ -153,11 +159,15 @@ private fun CreateComment(
         Column(
             modifier = modifier
                 .padding(16.dp)
+                .navigationBarsPadding()
+                .imePadding()
                 .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column(
                 modifier = Modifier
+                    .weight(1f)
                     .verticalScroll(scrollState)
             ) {
                 OutlinedTextField(
@@ -189,8 +199,6 @@ private fun CreateComment(
                     )
                 }
             }
-
-            Spacer(Modifier.height(10.dp))
 
             Button(
                 onClick = onSaveClicked,

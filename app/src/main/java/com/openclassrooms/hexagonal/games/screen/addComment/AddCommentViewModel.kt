@@ -8,6 +8,7 @@ import com.openclassrooms.hexagonal.games.data.repository.UserRepository
 import com.openclassrooms.hexagonal.games.domain.model.Comment
 import com.openclassrooms.hexagonal.games.screen.addPost.FormError
 import com.openclassrooms.hexagonal.games.screen.addPost.FormEvent
+import com.openclassrooms.hexagonal.games.utils.NetworkUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -23,7 +24,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AddCommentViewModel @Inject constructor(
     private val commentRepository: CommentRepository,
-    userRepository: UserRepository
+    userRepository: UserRepository,
+    private val networkUtils: NetworkUtils
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddCommentUiState.initial())
@@ -83,6 +85,11 @@ class AddCommentViewModel @Inject constructor(
      */
     fun addComment(postId: String) {
         viewModelScope.launch {
+            if (!networkUtils.isNetworkAvailable()) {
+                _uiState.update { it.copy(isSaving = false, error = FormError.NetworkError) }
+                return@launch
+            }
+
             _uiState.update { it.copy(isSaving = true, isSuccess = false, error = null) }
 
             try {
@@ -120,5 +127,8 @@ class AddCommentViewModel @Inject constructor(
         } else {
             addComment(postId)
         }
+    }
+    fun resetError() {
+        _uiState.update { it.copy(error = null) }
     }
 }
