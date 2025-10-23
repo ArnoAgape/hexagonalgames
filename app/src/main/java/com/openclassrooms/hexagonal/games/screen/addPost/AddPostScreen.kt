@@ -38,13 +38,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -58,6 +54,8 @@ import coil.compose.AsyncImage
 import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 import androidx.core.net.toUri
+import com.openclassrooms.hexagonal.games.ui.common.Event
+import com.openclassrooms.hexagonal.games.ui.common.EventsEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,22 +70,16 @@ fun AddPostScreen(
     val context = LocalContext.current
 
     // When an error occurs
-    LaunchedEffect(uiState.error) {
-        uiState.error?.let { error ->
-            val message = when (error) {
-                is FormError.GenericError -> R.string.error_generic
-                is FormError.NetworkError -> R.string.no_network
-
-                else -> error.messageRes
+    EventsEffect(viewModel.eventsFlow) { event ->
+        when (event) {
+            is Event.ShowToast -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            viewModel.resetError()
         }
     }
 
-    // When post is saved
-    LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
+    LaunchedEffect(uiState) {
+        if (uiState is AddPostUiState.Success) {
             Toast.makeText(context, context.getString(R.string.post_success), Toast.LENGTH_SHORT).show()
             onSaveClick()
         }
@@ -109,34 +101,55 @@ fun AddPostScreen(
         }
     ) { contentPadding ->
 
-        CreatePost(
-            modifier = Modifier.padding(contentPadding),
-            title = post.title,
-            onTitleChanged = { viewModel.onAction(FormEvent.TitleChanged(it)) },
-            description = post.description,
-            onDescriptionChanged = { viewModel.onAction(FormEvent.DescriptionChanged(it)) },
-            photoUrl = post.photoUrl,
-            onPhotoSelected = { viewModel.onAction(FormEvent.PhotoChanged(it)) },
-            onSaveClicked = { viewModel.onSaveClicked() },
-            error = uiState.error,
-            isPostValid = isPostValid,
-            uiState = uiState
-        )
+        when (uiState) {
 
-        if (uiState.isSaving) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator()
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(R.string.publishing),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+            is AddPostUiState.Idle, is AddPostUiState.Success -> {
+                val postToDisplay =
+                    if (uiState is AddPostUiState.Success) (uiState as AddPostUiState.Success).post else post
+
+                CreatePost(
+                    modifier = Modifier.padding(contentPadding),
+                    title = postToDisplay.title,
+                    onTitleChanged = { viewModel.onAction(FormEvent.TitleChanged(it)) },
+                    description = postToDisplay.description,
+                    onDescriptionChanged = { viewModel.onAction(FormEvent.DescriptionChanged(it)) },
+                    photoUrl = postToDisplay.photoUrl,
+                    onPhotoSelected = { viewModel.onAction(FormEvent.PhotoChanged(it)) },
+                    onSaveClicked = { viewModel.onSaveClicked() },
+                    isPostValid = isPostValid,
+                    isLoading = false
+                )
+            }
+
+            is AddPostUiState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.publishing),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+
+            is AddPostUiState.Error -> {
+                val errorState = uiState as AddPostUiState.Error
+                val message = when (errorState) {
+                    is AddPostUiState.Error.NoAccount -> (uiState as AddPostUiState.Error.NoAccount).message
+                    is AddPostUiState.Error.Generic -> (uiState as AddPostUiState.Error.Generic).message
+                }
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = message, color = MaterialTheme.colorScheme.error)
                 }
             }
         }
@@ -153,16 +166,9 @@ private fun CreatePost(
     photoUrl: String?,
     onPhotoSelected: (Uri?) -> Unit,
     onSaveClicked: () -> Unit,
-    error: FormError?,
     isPostValid: Boolean,
-    uiState: AddPostUiState
+    isLoading: Boolean
 ) {
-    var titleFieldHasBeenTouched by remember { mutableStateOf(false) }
-    var titleWasFocused by remember { mutableStateOf(false) }
-
-    var descriptionFieldTouched by remember { mutableStateOf(false) }
-    var descriptionWasFocused by remember { mutableStateOf(false) }
-
     val scrollState = rememberScrollState()
     val selectedImageUri = photoUrl?.toUri()
 
@@ -172,18 +178,6 @@ private fun CreatePost(
     ) { uri: Uri? ->
         onPhotoSelected(uri)
     }
-
-    val showError = when {
-        error is FormError.TitleError && titleFieldHasBeenTouched -> true
-        error is FormError.DescriptionError && descriptionFieldTouched -> true
-        error is FormError.PhotoError -> true
-        else -> false
-    }
-
-    val showTitleError =
-        (titleFieldHasBeenTouched) && error is FormError.TitleError
-    val showDescriptionError =
-        (descriptionFieldTouched) && error is FormError.DescriptionError
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -207,15 +201,8 @@ private fun CreatePost(
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 16.dp)
-                        .fillMaxWidth()
-                        .onFocusChanged { focusState ->
-                            if (titleWasFocused && !focusState.isFocused) {
-                                titleFieldHasBeenTouched = true
-                            }
-                            titleWasFocused = focusState.isFocused
-                        },
+                        .fillMaxWidth(),
                     value = title,
-                    isError = showTitleError,
                     onValueChange = { onTitleChanged(it) },
                     label = { Text(stringResource(id = R.string.hint_title)) },
                     keyboardOptions = KeyboardOptions(
@@ -225,31 +212,13 @@ private fun CreatePost(
                     singleLine = true
                 )
 
-                if (showError) {
-                    error?.let {
-                        Text(
-                            text = stringResource(id = error.messageRes),
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
-
                 // description field
                 if (description != null) {
                     OutlinedTextField(
                         modifier = Modifier
                             .padding(top = 16.dp)
-                            .fillMaxWidth()
-                            .onFocusChanged { focusState ->
-                                if (descriptionWasFocused && !focusState.isFocused) {
-                                    descriptionFieldTouched = true
-                                }
-                                descriptionWasFocused = focusState.isFocused
-                            },
+                            .fillMaxWidth(),
                         value = description,
-                        isError = showDescriptionError,
                         onValueChange = { onDescriptionChanged(it) },
                         label = { Text(stringResource(id = R.string.hint_description)) },
                         keyboardOptions = KeyboardOptions(
@@ -300,9 +269,9 @@ private fun CreatePost(
 
             Button(
                 onClick = onSaveClicked,
-                enabled = isPostValid && !uiState.isSaving
+                enabled = isPostValid && !isLoading
             ) {
-                if (uiState.isSaving) {
+                if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp,
@@ -327,10 +296,9 @@ private fun CreatePostPreview() {
             onDescriptionChanged = { },
             photoUrl = null,
             onSaveClicked = { },
-            error = null,
             onPhotoSelected = { },
             isPostValid = true,
-            uiState = AddPostUiState.initial()
+            isLoading = false
         )
     }
 }
@@ -346,10 +314,9 @@ private fun CreatePostErrorPreview() {
             onDescriptionChanged = { },
             photoUrl = null,
             onSaveClicked = { },
-            error = FormError.TitleError,
             onPhotoSelected = { },
             isPostValid = true,
-            uiState = AddPostUiState.initial()
+            isLoading = false
         )
     }
 }

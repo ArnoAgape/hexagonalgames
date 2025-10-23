@@ -28,24 +28,3 @@ sealed class FormEvent {
   data class CommentChanged(val comment: String) : FormEvent()
   
 }
-
-/**
- * A sealed class representing different errors that can occur on a form.
- *
- * Each error holds a resource ID for the corresponding error message string.
- */
-sealed class FormError(@StringRes val messageRes: Int) {
-  
-  /**
-   * Error indicating an issue with the form title.
-   *
-   * The actual error message can be retrieved using the provided resource ID (`R.string.error_title`).
-   */
-  data object TitleError : FormError(R.string.error_title)
-  data object DescriptionError : FormError(R.string.error_description)
-  data object PhotoError : FormError(R.string.error_photo)
-  data object GenericError : FormError(R.string.error_generic)
-  data object NetworkError : FormError(R.string.no_network)
-  data object CommentError : FormError(R.string.error_comment)
-  
-}

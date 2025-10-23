@@ -32,12 +32,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -46,8 +42,9 @@ import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.openclassrooms.hexagonal.games.R
-import com.openclassrooms.hexagonal.games.screen.addPost.FormError
 import com.openclassrooms.hexagonal.games.screen.addPost.FormEvent
+import com.openclassrooms.hexagonal.games.ui.common.Event
+import com.openclassrooms.hexagonal.games.ui.common.EventsEffect
 import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,22 +61,16 @@ fun AddCommentScreen(
     val context = LocalContext.current
 
     // When an error occurs
-    LaunchedEffect(uiState.error) {
-        uiState.error?.let { error ->
-            val message = when (error) {
-                is FormError.GenericError -> R.string.error_generic
-                is FormError.NetworkError -> R.string.no_network
-
-                else -> error.messageRes
+    EventsEffect(viewModel.eventsFlow) { event ->
+        when (event) {
+            is Event.ShowToast -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
             }
-            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-            viewModel.resetError()
         }
     }
 
-    // When comment is saved
-    LaunchedEffect(uiState.isSuccess) {
-        if (uiState.isSuccess) {
+    LaunchedEffect(uiState) {
+        if (uiState is AddCommentUiState.Success) {
             Toast.makeText(context, context.getString(R.string.comment_success), Toast.LENGTH_SHORT).show()
             onSaveClick()
         }
@@ -105,33 +96,53 @@ fun AddCommentScreen(
         }
     ) { contentPadding ->
 
-        if (uiState.isSaving) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator()
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(R.string.publishing),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+        when (uiState) {
+            is AddCommentUiState.Idle, is AddCommentUiState.Success -> {
+                val commentToDisplay =
+                    if (uiState is AddCommentUiState.Success) (uiState as AddCommentUiState.Success).comment else comment
+
+                CreateComment(
+                    modifier = Modifier.padding(contentPadding),
+                    comment = commentToDisplay.content,
+                    onContentChanged = { viewModel.onAction(FormEvent.CommentChanged(it)) },
+                    onSaveClicked = { viewModel.onSaveClicked(postId) },
+                    isCommentValid = isCommentValid,
+                    isLoading = false
+                )
+            }
+
+            is AddCommentUiState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.8f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator()
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.publishing),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+            }
+
+            is AddCommentUiState.Error -> {
+                val errorState = uiState as AddCommentUiState.Error
+                val message = when (errorState) {
+                    is AddCommentUiState.Error.NoAccount -> (uiState as AddCommentUiState.Error.NoAccount).message
+                    is AddCommentUiState.Error.Generic -> (uiState as AddCommentUiState.Error.Generic).message
+                }
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = message, color = MaterialTheme.colorScheme.error)
                 }
             }
         }
-
-        CreateComment(
-            modifier = Modifier.padding(contentPadding),
-            comment = comment.content,
-            onContentChanged = { viewModel.onAction(FormEvent.CommentChanged(it)) },
-            onSaveClicked = { viewModel.onSaveClicked(postId) },
-            error = uiState.error,
-            isCommentValid = isCommentValid,
-            uiState = uiState
-        )
     }
 }
 
@@ -141,17 +152,11 @@ private fun CreateComment(
     comment: String,
     onContentChanged: (String) -> Unit,
     onSaveClicked: () -> Unit,
-    error: FormError?,
     isCommentValid: Boolean,
-    uiState: AddCommentUiState
+    isLoading: Boolean
 ) {
-    var commentFieldHasBeenTouched by remember { mutableStateOf(false) }
-    var wasFocused by remember { mutableStateOf(false) }
-
     val scrollState = rememberScrollState()
 
-    val showCommentError =
-        (commentFieldHasBeenTouched) && error is FormError.CommentError
 
     Surface(
         color = MaterialTheme.colorScheme.background
@@ -173,15 +178,8 @@ private fun CreateComment(
                 OutlinedTextField(
                     modifier = Modifier
                         .padding(top = 8.dp)
-                        .fillMaxWidth()
-                        .onFocusChanged { focusState ->
-                            if (wasFocused && !focusState.isFocused) {
-                                commentFieldHasBeenTouched = true
-                            }
-                            wasFocused = focusState.isFocused
-                        },
+                        .fillMaxWidth(),
                     value = comment,
-                    isError = showCommentError,
                     onValueChange = { onContentChanged(it) },
                     label = { Text(stringResource(id = R.string.hint_comment)) },
                     keyboardOptions = KeyboardOptions(
@@ -189,22 +187,13 @@ private fun CreateComment(
                         capitalization = KeyboardCapitalization.Sentences
                     )
                 )
-
-                if (showCommentError) {
-                    Text(
-                        text = stringResource(id = error.messageRes),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
             }
 
             Button(
                 onClick = onSaveClicked,
-                enabled = isCommentValid && !uiState.isSaving
+                enabled = isCommentValid && !isLoading
             ) {
-                if (uiState.isSaving) {
+                if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(18.dp),
                         strokeWidth = 2.dp,
@@ -226,9 +215,8 @@ private fun CreateCommentPreview() {
             comment = "test",
             onContentChanged = { },
             onSaveClicked = { },
-            error = null,
             isCommentValid = true,
-            uiState = AddCommentUiState.initial()
+            isLoading = false
         )
     }
 }

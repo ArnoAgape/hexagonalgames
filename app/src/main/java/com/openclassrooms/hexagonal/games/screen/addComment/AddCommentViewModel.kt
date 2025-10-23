@@ -1,23 +1,25 @@
 package com.openclassrooms.hexagonal.games.screen.addComment
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.data.repository.CommentRepository
 import com.openclassrooms.hexagonal.games.data.repository.UserRepository
 import com.openclassrooms.hexagonal.games.domain.model.Comment
-import com.openclassrooms.hexagonal.games.screen.addPost.FormError
 import com.openclassrooms.hexagonal.games.screen.addPost.FormEvent
+import com.openclassrooms.hexagonal.games.ui.common.Event
 import com.openclassrooms.hexagonal.games.ui.utils.NetworkUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.IOException
 import java.util.UUID
 import javax.inject.Inject
 
@@ -28,11 +30,11 @@ class AddCommentViewModel @Inject constructor(
     private val networkUtils: NetworkUtils
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AddCommentUiState.initial())
+    private val _uiState = MutableStateFlow<AddCommentUiState>(AddCommentUiState.Idle)
     val uiState: StateFlow<AddCommentUiState> = _uiState.asStateFlow()
     private val _user = MutableStateFlow(userRepository.getCurrentUser())
-    private val _error = MutableStateFlow<FormError?>(null)
-
+    private val _events = Channel<Event>()
+    val eventsFlow = _events.receiveAsFlow()
 
     /**
      * Internal mutable state flow representing the current comment being edited.
@@ -86,38 +88,50 @@ class AddCommentViewModel @Inject constructor(
     fun addComment(postId: String) {
         viewModelScope.launch {
             if (!networkUtils.isNetworkAvailable()) {
-                _uiState.update { it.copy(isSaving = false, error = FormError.NetworkError) }
+                _events.trySend(Event.ShowToast(R.string.no_network))
                 return@launch
             }
 
-            _uiState.update { it.copy(isSaving = true, isSuccess = false, error = null) }
+            _uiState.value = AddCommentUiState.Loading
 
             try {
                 val commentToSave = _comment.value.copy(author = _user.value)
-
                 commentRepository.addComment(postId, commentToSave)
 
-                _uiState.update { it.copy(isSaving = false, isSuccess = true) }
-
-                Log.d("AddCommentViewModel", "Comment added successfully: $commentToSave")
+                _uiState.value = AddCommentUiState.Success(commentToSave)
+                _events.trySend(Event.ShowToast(R.string.comment_success))
 
             } catch (e: Exception) {
-                Log.e("AddCommentViewModel", "Error while adding the comment", e)
-                _uiState.update { it.copy(isSaving = false, error = FormError.GenericError) }
+                when (e) {
+                    is IllegalStateException -> {
+                        _uiState.value = AddCommentUiState.Error.NoAccount()
+                        _events.trySend(Event.ShowToast(R.string.error_no_account_comment))
+                    }
+
+                    is IOException -> {
+                        _uiState.value = AddCommentUiState.Error.Generic("Network error: ${e.message}")
+                        _events.trySend(Event.ShowToast(R.string.no_network))
+                    }
+
+                    else -> {
+                        _uiState.value = AddCommentUiState.Error.Generic()
+                        _events.trySend(Event.ShowToast(R.string.error_generic))
+                    }
+                }
             }
         }
     }
 
     fun onSaveClicked(postId: String) {
-        _error.value = null
-        if (!isCommentValid.value) {
-            _error.value = FormError.CommentError
-        } else {
-            addComment(postId)
-        }
-    }
+        val comment = _comment.value
+        when {
+            comment.content.isEmpty() -> {
+                _events.trySend(Event.ShowToast(R.string.error_comment))
+            }
 
-    fun resetError() {
-        _uiState.update { it.copy(error = null) }
+            else -> {
+                addComment(postId)
+            }
+        }
     }
 }

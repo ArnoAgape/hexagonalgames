@@ -1,20 +1,22 @@
 package com.openclassrooms.hexagonal.games.screen.addPost
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.data.repository.PostRepository
 import com.openclassrooms.hexagonal.games.data.repository.UserRepository
 import com.openclassrooms.hexagonal.games.domain.model.Post
+import com.openclassrooms.hexagonal.games.ui.common.Event
 import com.openclassrooms.hexagonal.games.ui.utils.NetworkUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.UUID
@@ -31,10 +33,11 @@ class AddPostViewModel @Inject constructor(
     private val networkUtils: NetworkUtils
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(AddPostUiState.initial())
+    private val _uiState = MutableStateFlow<AddPostUiState>(AddPostUiState.Idle)
     val uiState: StateFlow<AddPostUiState> = _uiState.asStateFlow()
     private val _user = MutableStateFlow(userRepository.getCurrentUser())
-    private val _error = MutableStateFlow<FormError?>(null)
+    private val _events = Channel<Event>()
+    val eventsFlow = _events.receiveAsFlow()
     private val _post = MutableStateFlow(
         Post(
             id = UUID.randomUUID().toString(),
@@ -100,11 +103,11 @@ class AddPostViewModel @Inject constructor(
     fun addPost() {
         viewModelScope.launch {
             if (!networkUtils.isNetworkAvailable()) {
-                _uiState.update { it.copy(isSaving = false, error = FormError.NetworkError) }
+                _events.trySend(Event.ShowToast(R.string.no_network))
                 return@launch
             }
 
-            _uiState.update { it.copy(isSaving = true, isSuccess = false, error = null) }
+            _uiState.value = AddPostUiState.Loading
 
             try {
                 // Add the author to the post
@@ -112,49 +115,45 @@ class AddPostViewModel @Inject constructor(
                 // Call the repository to add the post
                 postRepository.addPost(postToSave)
 
-                _uiState.update { it.copy(isSaving = false, isSuccess = true) }
-
-                Log.d("AddPostViewModel", "Post added successfully: $postToSave")
-
-            } catch (e: IOException) {
-                Log.e("AddPostViewModel", "Network error", e)
-                _uiState.update { it.copy(isSaving = false, error = FormError.NetworkError) }
+                _uiState.value = AddPostUiState.Success(postToSave)
+                _events.trySend(Event.ShowToast(R.string.post_success))
 
             } catch (e: Exception) {
-                Log.e("AddPostViewModel", "Error while adding the post", e)
-                _uiState.update { it.copy(isSaving = false, error = FormError.GenericError) }
+                when (e) {
+                    is IllegalStateException -> {
+                        _uiState.value = AddPostUiState.Error.NoAccount()
+                        _events.trySend(Event.ShowToast(R.string.error_no_account_post))
+                    }
+
+                    is IOException -> {
+                        _uiState.value = AddPostUiState.Error.Generic("Network error: ${e.message}")
+                        _events.trySend(Event.ShowToast(R.string.no_network))
+                    }
+
+                    else -> {
+                        _uiState.value = AddPostUiState.Error.Generic()
+                        _events.trySend(Event.ShowToast(R.string.error_generic))
+                    }
+                }
             }
         }
     }
+        fun onSaveClicked() {
+            val post = _post.value
+            when {
+                post.title.isBlank() -> {
+                    _events.trySend(Event.ShowToast(R.string.error_title))
+                }
 
-    /**
-     * Verifies mandatory fields of the post
-     * and returns a corresponding FormError if so.
-     *
-     * @return A FormError.TitleError if title is empty, null otherwise.
-     */
-    private fun verifyPost(post: Post = _post.value): FormError? {
-        return when {
-            post.title.isBlank() -> FormError.TitleError
-            post.description.isNullOrBlank() && post.photoUrl == null -> FormError.DescriptionError
-            else -> null
+                post.description.isNullOrBlank() && post.photoUrl == null -> {
+                    _events.trySend(Event.ShowToast(R.string.error_description))
+                }
+
+                else -> {
+                    addPost()
+                }
+            }
         }
-    }
 
-    fun onSaveClicked() {
-        Log.d("AddPostViewModel", ">>> Post before validation: ${_post.value}")
-        val validationError = verifyPost()
-        if (validationError != null) {
-            Log.d("AddPostViewModel", ">>> Validation failed: $validationError")
-            _error.value = validationError
-        } else {
-            Log.d("AddPostViewModel", ">>> Validation OK, addPost() called")
-            addPost()
-        }
-    }
 
-    fun resetError() {
-        _uiState.update { it.copy(error = null) }
     }
-
-}

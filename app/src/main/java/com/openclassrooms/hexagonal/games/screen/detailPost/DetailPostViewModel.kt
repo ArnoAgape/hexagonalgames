@@ -72,9 +72,12 @@ class DetailPostViewModel @Inject constructor(
                     }
                 }
                 .catch { e ->
-                    _uiState.update { it.copy(
-                        postState = DetailPostUiState.Error.Generic(
-                            e.message ?: "Unknown error"))
+                    _uiState.update {
+                        it.copy(
+                            postState = DetailPostUiState.Error.Generic(
+                                e.message ?: "Unknown error"
+                            )
+                        )
                     }
                 }
                 .collect { post ->
@@ -98,9 +101,12 @@ class DetailPostViewModel @Inject constructor(
                     }
                 }
                 .catch { e ->
-                    _uiState.update { it.copy(
-                        commentState = DetailCommentUiState.Error.Generic(
-                            e.message ?: "Unknown error"))
+                    _uiState.update {
+                        it.copy(
+                            commentState = DetailCommentUiState.Error.Generic(
+                                e.message ?: "Unknown error"
+                            )
+                        )
                     }
                 }
                 .collect { comments ->
@@ -115,12 +121,14 @@ class DetailPostViewModel @Inject constructor(
     }
 
     fun refreshData() {
-        if (!networkUtils.isNetworkAvailable()) {
-            _events.trySend(Event.ShowToast(R.string.no_network))
-            return
+        viewModelScope.launch {
+            if (!networkUtils.isNetworkAvailable()) {
+                _events.trySend(Event.ShowToast(R.string.no_network))
+                return@launch
+            }
+            observePost()
+            observeComments(postId, userId)
         }
-        observePost()
-        observeComments(postId, userId)
     }
 
 }

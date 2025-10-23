@@ -62,10 +62,12 @@ class HomefeedViewModel @Inject constructor(
     }
 
     fun refreshPosts() {
-        if (!networkUtils.isNetworkAvailable()) {
-            _events.trySend(Event.ShowToast(R.string.no_network))
-            return
+        viewModelScope.launch {
+            if (!networkUtils.isNetworkAvailable()) {
+                _events.trySend(Event.ShowToast(R.string.no_network))
+                return@launch
+            }
+            getAllPosts()
         }
-        getAllPosts()
     }
 }
