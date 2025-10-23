@@ -140,7 +140,11 @@ fun DetailScreen(
                         .fillMaxSize()
                 ) {
                     item {
-                        PostContent(post = post)
+                        PostContent(
+                            post = post,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                        )
                     }
 
                     when (commentState) {
@@ -212,13 +216,14 @@ fun DetailScreen(
 
 @Composable
 private fun PostContent(
+    modifier: Modifier,
     post: Post
 ) {
     Surface(
-        modifier = Modifier
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = modifier.padding(16.dp)
         ) {
             // Author
             post.author?.displayName?.let {
@@ -304,71 +309,6 @@ private fun CommentContent(
     }
 }
 
-@Composable
-private fun DetailScreenContentPreviewable(
-    post: Post,
-    comments: List<Comment>,
-    modifier: Modifier = Modifier
-) {
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-    ) {
-        // Post section
-        item {
-            PostContent(
-                post = post
-            )
-            Spacer(modifier = Modifier.height(24.dp))
-        }
-
-        // Comment section
-        items(comments) { comment ->
-            CommentContent(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                comment = comment
-            )
-        }
-    }
-}
-
-@PreviewLightDark
-@Composable
-private fun DetailScreenPreview() {
-    HexagonalGamesTheme {
-        DetailScreenContentPreviewable(
-            post = Post(
-                id = "1",
-                title = "Songs",
-                description = "Classical music from this talented singer",
-                photoUrl = null,
-                timestamp = 1,
-                author = User(
-                    id = "1",
-                    displayName = "Aretha Franklin",
-                    email = "test@mail.fr",
-                    photoUrl = null
-                )
-            ),
-            comments = listOf(
-                Comment(
-                    id = "1",
-                    content = "I love that song",
-                    timestamp = 1,
-                    author = User(
-                        id = "1",
-                        displayName = "Aretha Franklin",
-                        email = "test@mail.fr",
-                        photoUrl = null
-                    )
-                )
-            )
-        )
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @PreviewLightDark
 @Composable
@@ -388,6 +328,7 @@ private fun PostScreenPreview() {
                     photoUrl = null
                 )
             ),
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

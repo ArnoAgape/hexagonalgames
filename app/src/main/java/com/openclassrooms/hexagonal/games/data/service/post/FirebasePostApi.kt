@@ -1,15 +1,21 @@
 package com.openclassrooms.hexagonal.games.data.service.post
 
+import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.storage.FirebaseStorage
 import com.openclassrooms.hexagonal.games.domain.model.Post
 import com.openclassrooms.hexagonal.games.ui.utils.NetworkUtils
 import jakarta.inject.Inject
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import java.io.IOException
 
 class FirebasePostApi @Inject constructor(private val networkUtils: NetworkUtils) : PostApi {
@@ -37,16 +43,17 @@ class FirebasePostApi @Inject constructor(private val networkUtils: NetworkUtils
         if (!networkUtils.isNetworkAvailable()) {
             throw IOException("No internet connection")
         }
-
         try {
             postsCollection
                 .document(post.id)
                 .set(post)
                 .await()
-            Log.d("FirebasePostApi", "Post added successfully: ${post.title}")
+            post.photoUrl?.let { uriString ->
+                val uri = uriString.toUri()
+                uploadImageToFirebase(uri)
+            }
 
         } catch (e: Exception) {
-            Log.e("FirebasePostApi", "Error while adding the post", e)
             throw e
         }
     }
@@ -82,6 +89,25 @@ class FirebasePostApi @Inject constructor(private val networkUtils: NetworkUtils
             }
 
         awaitClose { listener.remove() }
+    }
+
+    override suspend fun uploadImageToFirebase(uri: Uri): String? {
+        return withContext(Dispatchers.IO + SupervisorJob()) {
+            try {
+                val fileRef = FirebaseStorage.getInstance()
+                    .reference
+                    .child("images/${System.currentTimeMillis()}.jpg")
+
+                fileRef.putFile(uri).await()
+
+                val downloadUrl = fileRef.downloadUrl.await()
+
+                downloadUrl.toString()
+            } catch (e: Exception) {
+                Log.e("FirebaseUpload", "Error while uploading the picture", e)
+                null
+            }
+        }
     }
 
 }

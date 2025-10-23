@@ -11,7 +11,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-// Extension property pour le DataStore
 private val Context.dataStore by preferencesDataStore(name = "user_settings")
 
 @Module

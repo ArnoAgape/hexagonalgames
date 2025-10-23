@@ -1,5 +1,6 @@
 package com.openclassrooms.hexagonal.games.data.service.post
 
+import android.net.Uri
 import com.openclassrooms.hexagonal.games.domain.model.Post
 import com.openclassrooms.hexagonal.games.domain.model.User
 import kotlinx.coroutines.flow.Flow
@@ -79,5 +80,10 @@ class PostFakeApi : PostApi {
         posts.map { list ->
             list.find { it.id == postId }
         }
+
+    override suspend fun uploadImageToFirebase(uri: Uri): String? {
+        posts.value.toString()
+        return uri.toString()
+    }
 
 }

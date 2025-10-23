@@ -1,5 +1,6 @@
 package com.openclassrooms.hexagonal.games.data.service.post
 
+import android.net.Uri
 import com.openclassrooms.hexagonal.games.domain.model.Post
 import kotlinx.coroutines.flow.Flow
 
@@ -26,4 +27,6 @@ interface PostApi {
   fun getCurrentPost() : Flow<Post>
 
   fun getPostById(postId: String): Flow<Post?>
+
+  suspend fun uploadImageToFirebase(uri: Uri): String?
 }
