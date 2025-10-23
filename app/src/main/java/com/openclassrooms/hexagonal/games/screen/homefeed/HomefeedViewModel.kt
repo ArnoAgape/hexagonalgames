@@ -2,15 +2,19 @@ package com.openclassrooms.hexagonal.games.screen.homefeed
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.data.repository.PostRepository
 import com.openclassrooms.hexagonal.games.data.repository.UserRepository
-import com.openclassrooms.hexagonal.games.utils.NetworkUtils
+import com.openclassrooms.hexagonal.games.ui.common.Event
+import com.openclassrooms.hexagonal.games.ui.utils.NetworkUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -31,6 +35,9 @@ class HomefeedViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<PostUiState>(PostUiState.Loading)
     val uiState: StateFlow<PostUiState> = _uiState
 
+    private val _events = Channel<Event>()
+    val eventsFlow = _events.receiveAsFlow()
+
     val isUserSignedIn =
         userRepository.isUserSignedIn()
             .stateIn(viewModelScope, SharingStarted.Eagerly, false)
@@ -41,10 +48,6 @@ class HomefeedViewModel @Inject constructor(
 
     private fun getAllPosts() {
         viewModelScope.launch {
-            if (!networkUtils.isNetworkAvailable()) {
-                _uiState.value = PostUiState.Error.Network("No internet connection")
-                return@launch
-            }
             postRepository.posts
                 .onStart { _uiState.value = PostUiState.Loading }
                 .catch { e -> _uiState.value = PostUiState.Error.Generic(e.message ?: "Unknown error") }
@@ -59,21 +62,10 @@ class HomefeedViewModel @Inject constructor(
     }
 
     fun refreshPosts() {
-        viewModelScope.launch {
-            if (!networkUtils.isNetworkAvailable()) {
-                _uiState.value = PostUiState.Error.Network("No internet connection")
-                return@launch
-            }
-
-            postRepository.posts
-                .catch { e -> _uiState.value = PostUiState.Error.Generic(e.message ?: "Error") }
-                .collect { posts ->
-                    _uiState.value = if (posts.isEmpty()) {
-                        PostUiState.Error.Empty()
-                    } else {
-                        PostUiState.Success(posts)
-                    }
-                }
+        if (!networkUtils.isNetworkAvailable()) {
+            _events.trySend(Event.ShowToast(R.string.no_network))
+            return
         }
+        getAllPosts()
     }
 }

@@ -3,7 +3,7 @@ package com.openclassrooms.hexagonal.games.data.service.comment
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.openclassrooms.hexagonal.games.domain.model.Comment
-import com.openclassrooms.hexagonal.games.utils.NetworkUtils
+import com.openclassrooms.hexagonal.games.ui.utils.NetworkUtils
 import jakarta.inject.Inject
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow

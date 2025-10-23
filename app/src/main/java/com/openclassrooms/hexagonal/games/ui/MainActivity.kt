@@ -85,7 +85,7 @@ fun HexagonalGamesNavHost(
             )
 
             HomefeedScreen(
-                homeViewModel = hiltViewModel<HomefeedViewModel>(),
+                viewModel = hiltViewModel<HomefeedViewModel>(),
                 onFABClick = {
                     navHostController.navigate(Screen.AddPost.route)
                 },
@@ -133,9 +133,9 @@ fun HexagonalGamesNavHost(
                 viewModel = hiltViewModel<DetailPostViewModel>(),
                 onBackClick = { navHostController.navigateUp() },
                 onFABClick = {
-                    val uiState = detailViewModel.uiPostState.value
-                    if (uiState is DetailPostUiState.Success) {
-                        val post = uiState.post
+                    val uiState = detailViewModel.uiState.value
+                    if (uiState.postState is DetailPostUiState.Success) {
+                        val post = uiState.postState.post
                         navHostController.navigate(Screen.AddComment.createRoute(post.id))
                     }
                 }

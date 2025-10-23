@@ -54,12 +54,14 @@ import coil.util.DebugLogger
 import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.domain.model.Post
 import com.openclassrooms.hexagonal.games.domain.model.User
+import com.openclassrooms.hexagonal.games.ui.common.Event
+import com.openclassrooms.hexagonal.games.ui.common.EventsEffect
 import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomefeedScreen(
-    homeViewModel: HomefeedViewModel,
+    viewModel: HomefeedViewModel,
     onPostClick: (Post) -> Unit = {},
     onSettingsClick: () -> Unit = {},
     onFABClick: () -> Unit = {},
@@ -67,9 +69,17 @@ fun HomefeedScreen(
 ) {
     var showMenu by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
-    val isSignedIn by homeViewModel.isUserSignedIn.collectAsStateWithLifecycle()
-    val uiState by homeViewModel.uiState.collectAsStateWithLifecycle()
+    val isSignedIn by viewModel.isUserSignedIn.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val refreshState = rememberPullToRefreshState()
+
+    EventsEffect(viewModel.eventsFlow) { event ->
+        when (event) {
+            is Event.ShowToast -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier
@@ -144,7 +154,7 @@ fun HomefeedScreen(
                 .padding(contentPadding),
             state = refreshState,
             isRefreshing = uiState is PostUiState.Loading,
-            onRefresh = { homeViewModel.refreshPosts() }
+            onRefresh = { viewModel.refreshPosts() }
         ) {
             when (uiState) {
                 is PostUiState.Success ->
@@ -166,21 +176,6 @@ fun HomefeedScreen(
                             modifier = Modifier.fillMaxSize(),
                             textAlign = TextAlign.Center,
                         )
-                    }
-                }
-
-                is PostUiState.Error.Network -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.Top,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Toast.makeText(
-                            context, context.getString(R.string.no_network),
-                            Toast.LENGTH_SHORT
-                        ).show()
                     }
                 }
 

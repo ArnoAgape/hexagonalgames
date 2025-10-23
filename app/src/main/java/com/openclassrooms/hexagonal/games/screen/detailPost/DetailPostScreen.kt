@@ -32,7 +32,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,7 +49,9 @@ import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.domain.model.Comment
 import com.openclassrooms.hexagonal.games.domain.model.Post
 import com.openclassrooms.hexagonal.games.domain.model.User
+import com.openclassrooms.hexagonal.games.ui.common.Event
 import com.openclassrooms.hexagonal.games.ui.theme.HexagonalGamesTheme
+import com.openclassrooms.hexagonal.games.ui.common.EventsEffect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,18 +60,18 @@ fun DetailScreen(
     onFABClick: () -> Unit = {},
     onBackClick: () -> Unit
 ) {
-    val state by viewModel.uiPostState.collectAsStateWithLifecycle()
-    val commentState by viewModel.uiCommentState.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val isSignedIn by viewModel.isUserSignedIn.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val refreshState = rememberPullToRefreshState()
 
-    LaunchedEffect(state) {
-        if (state is DetailPostUiState.Error.Network) {
-            Toast.makeText(context, context.getString(R.string.no_network), Toast.LENGTH_SHORT).show()
+    EventsEffect(viewModel.eventsFlow) { event ->
+        when (event) {
+            is Event.ShowToast -> {
+                Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+            }
         }
     }
-
 
     Scaffold(
         modifier = Modifier
@@ -79,18 +80,14 @@ fun DetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    when (state) {
+                    when (uiState.postState) {
                         is DetailPostUiState.Success -> {
-                            val post = (state as DetailPostUiState.Success).post
+                            val post = (uiState.postState as DetailPostUiState.Success).post
                             Text(
                                 text = post.title,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
-                        }
-
-                        is DetailPostUiState.Error -> {
-                            Text(stringResource(R.string.error))
                         }
 
                         else -> {}
@@ -132,12 +129,12 @@ fun DetailScreen(
                 .fillMaxSize()
                 .padding(contentPadding),
             state = refreshState,
-            isRefreshing = state is DetailPostUiState.Loading,
+            isRefreshing = uiState.postState is DetailPostUiState.Loading,
             onRefresh = { viewModel.refreshData() }
         ) {
-            when (state) {
+            when (uiState.postState) {
                 is DetailPostUiState.Success -> {
-                    val post = (state as DetailPostUiState.Success).post
+                    val post = (uiState.postState as DetailPostUiState.Success).post
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -146,11 +143,11 @@ fun DetailScreen(
                             PostContent(post = post)
                         }
 
-                        when (commentState) {
+                        when (uiState.commentState) {
                             is DetailCommentUiState.Success -> {
                                 val comments =
-                                    (commentState as DetailCommentUiState.Success).comments
-                                val user = (commentState as DetailCommentUiState.Success).user
+                                    (uiState.commentState as DetailCommentUiState.Success).comments
+                                val user = (uiState.commentState as DetailCommentUiState.Success).user
                                 if (comments.isEmpty()) {
                                     item {
                                         Text(
@@ -173,7 +170,7 @@ fun DetailScreen(
                                 }
                             }
 
-                            is DetailCommentUiState.Error -> {
+                            is DetailCommentUiState.Error.Empty -> {
                                 item {
                                     Text(
                                         text = stringResource(R.string.no_comment),
@@ -200,11 +197,7 @@ fun DetailScreen(
                 }
 
                 is DetailPostUiState.Error -> {
-                    when (val errorState = state as DetailPostUiState.Error) {
-                        is DetailPostUiState.Error.Network -> {
-                            Toast.makeText(context, context.getString(R.string.no_network), Toast.LENGTH_SHORT).show()
-                        }
-
+                    when (val errorState = uiState.postState as DetailPostUiState.Error) {
                         is DetailPostUiState.Error.Empty -> {
                             Box(
                                 modifier = Modifier
@@ -221,10 +214,10 @@ fun DetailScreen(
                             }
                         }
 
-
                         is DetailPostUiState.Error.Generic -> {
                             Toast.makeText(context, errorState.message, Toast.LENGTH_SHORT).show()
                         }
+                        else -> {}
                     }
                 }
 
