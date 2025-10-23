@@ -1,8 +1,6 @@
 package com.openclassrooms.hexagonal.games.screen.addPost
 
 import android.net.Uri
-import androidx.annotation.StringRes
-import com.openclassrooms.hexagonal.games.R
 
 /**
  * A sealed class representing different events that can occur on a form.

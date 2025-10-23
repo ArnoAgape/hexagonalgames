@@ -52,6 +52,7 @@ dependencies {
   implementation (libs.firebase.firestore)
   implementation(libs.firebase.messaging)
   implementation(libs.firebase.ui.storage)
+  implementation(libs.datastore.preferences)
 
   //kotlin
   implementation(platform(libs.kotlin.bom))

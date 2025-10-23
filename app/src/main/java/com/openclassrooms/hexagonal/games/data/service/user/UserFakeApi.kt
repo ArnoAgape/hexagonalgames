@@ -25,7 +25,7 @@ class UserFakeApi : UserApi {
     private val _isUserSignedIn = MutableStateFlow(false)
     val isUserSignedIn: StateFlow<Boolean> = _isUserSignedIn.asStateFlow()
 
-    override fun getCurrentUser(): User? = _currentUser.value
+    override suspend fun getCurrentUser(): User? = _currentUser.value
 
     override suspend fun ensureUserInFirestore(): Result<Unit> {
         val user = _currentUser.value ?: return Result.failure(Exception("User not signed in"))

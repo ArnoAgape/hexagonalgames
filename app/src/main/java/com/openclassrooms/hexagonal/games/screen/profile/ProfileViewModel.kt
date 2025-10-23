@@ -18,8 +18,14 @@ class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository
 ) : ViewModel() {
 
-    private val _user = MutableStateFlow(userRepository.getCurrentUser())
+    private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _user.value = userRepository.getCurrentUser()
+        }
+    }
 
     fun syncUserWithFirestore() {
         viewModelScope.launch {
@@ -36,9 +42,11 @@ class ProfileViewModel @Inject constructor(
             )
 
     fun signOut() {
-        val result = userRepository.signOut()
-        if (result.isSuccess) {
-            _user.value = null
+        viewModelScope.launch {
+            val result = userRepository.signOut()
+            if (result.isSuccess) {
+                _user.value = null
+            }
         }
     }
 

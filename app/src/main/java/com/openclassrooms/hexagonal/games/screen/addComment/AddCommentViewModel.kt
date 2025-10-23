@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.data.repository.CommentRepository
-import com.openclassrooms.hexagonal.games.data.repository.UserRepository
 import com.openclassrooms.hexagonal.games.domain.model.Comment
+import com.openclassrooms.hexagonal.games.domain.model.User
 import com.openclassrooms.hexagonal.games.screen.addPost.FormEvent
 import com.openclassrooms.hexagonal.games.ui.common.Event
 import com.openclassrooms.hexagonal.games.ui.utils.NetworkUtils
@@ -26,13 +26,12 @@ import javax.inject.Inject
 @HiltViewModel
 class AddCommentViewModel @Inject constructor(
     private val commentRepository: CommentRepository,
-    userRepository: UserRepository,
     private val networkUtils: NetworkUtils
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AddCommentUiState>(AddCommentUiState.Idle)
     val uiState: StateFlow<AddCommentUiState> = _uiState.asStateFlow()
-    private val _user = MutableStateFlow(userRepository.getCurrentUser())
+    private val _user = MutableStateFlow<User?>(null)
     private val _events = Channel<Event>()
     val eventsFlow = _events.receiveAsFlow()
 

@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Singleton
 class UserRepository @Inject constructor(private val userApi: UserApi) {
-    fun getCurrentUser() = userApi.getCurrentUser()
+    suspend fun getCurrentUser() = userApi.getCurrentUser()
     suspend fun ensureUserInFirestore() = userApi.ensureUserInFirestore()
     fun signOut() = userApi.signOut()
     fun isUserSignedIn(): Flow<Boolean> = userApi.isUserSignedIn()

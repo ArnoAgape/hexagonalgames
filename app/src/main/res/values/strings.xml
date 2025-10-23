@@ -7,6 +7,7 @@
   <string name="action_sign_out">Sign out</string>
   <string name="action_delete_account">Delete account</string>
   <string name="unknown_error">An unknown error occurred.</string>
+  <string name="unknown_author">Unknown Author</string>
   <string name="error">Error</string>
   <string name="error_generic">An issue occurred</string>
   <string name="error_no_account_post">An account is mandatory in order to add a post</string>

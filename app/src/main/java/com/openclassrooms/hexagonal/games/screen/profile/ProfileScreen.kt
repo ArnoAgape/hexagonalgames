@@ -2,6 +2,7 @@ package com.openclassrooms.hexagonal.games.screen.profile
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,7 +49,6 @@ fun ProfileScreen(
     viewModel: ProfileViewModel,
     onBackClick: () -> Unit
 ) {
-
     val user by viewModel.user.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -77,18 +78,31 @@ fun ProfileScreen(
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            ProfileContent(
-                modifier = Modifier.fillMaxWidth(),
-                userName = user?.displayName ?: "",
-                onTitleChanged = { },
-                emailAddress = user?.email ?: "",
-                onDescriptionChanged = { },
-                onSignOutClick = {
-                    viewModel.signOut()
-                    onBackClick()
-                },
-                onDeleteAccountClick = { viewModel.deleteAccount() }
-            )
+            when (user) {
+                null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                else -> {
+                    ProfileContent(
+                        modifier = Modifier.fillMaxWidth(),
+                        userName = user?.displayName ?: "",
+                        onTitleChanged = { },
+                        emailAddress = user?.email ?: "",
+                        onDescriptionChanged = { },
+                        onSignOutClick = {
+                            viewModel.signOut()
+                            onBackClick()
+                        },
+                        onDeleteAccountClick = { viewModel.deleteAccount() }
+                    )
+                }
+            }
         }
     }
 }

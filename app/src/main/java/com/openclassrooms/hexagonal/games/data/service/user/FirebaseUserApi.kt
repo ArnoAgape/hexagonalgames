@@ -25,7 +25,7 @@ class FirebaseUserApi : UserApi {
         )
     }
 
-    override fun getCurrentUser(): User? {
+    override suspend fun getCurrentUser(): User? {
         return auth.currentUser?.toDomain()
     }
 

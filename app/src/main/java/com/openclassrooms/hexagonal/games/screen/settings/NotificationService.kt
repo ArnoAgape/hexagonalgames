@@ -1,4 +1,4 @@
-package com.openclassrooms.hexagonal.games.notification
+package com.openclassrooms.hexagonal.games.screen.settings
 
 import android.Manifest
 import android.app.NotificationChannel

@@ -2,7 +2,6 @@ package com.openclassrooms.hexagonal.games.screen.detailPost
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -132,45 +131,23 @@ fun DetailScreen(
             isRefreshing = uiState.postState is DetailPostUiState.Loading,
             onRefresh = { viewModel.refreshData() }
         ) {
-            when (uiState.postState) {
-                is DetailPostUiState.Success -> {
-                    val post = (uiState.postState as DetailPostUiState.Success).post
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                    ) {
-                        item {
-                            PostContent(post = post)
-                        }
+            if (uiState.postState is DetailPostUiState.Success) {
+                val post = (uiState.postState as DetailPostUiState.Success).post
+                val commentState = uiState.commentState
 
-                        when (uiState.commentState) {
-                            is DetailCommentUiState.Success -> {
-                                val comments =
-                                    (uiState.commentState as DetailCommentUiState.Success).comments
-                                val user = (uiState.commentState as DetailCommentUiState.Success).user
-                                if (comments.isEmpty()) {
-                                    item {
-                                        Text(
-                                            text = stringResource(R.string.no_comment),
-                                            modifier = Modifier
-                                                .padding(16.dp)
-                                                .fillMaxWidth(),
-                                            textAlign = TextAlign.Center
-                                        )
-                                    }
-                                } else {
-                                    items(comments) { comment ->
-                                        CommentContent(
-                                            modifier = Modifier
-                                                .fillMaxWidth(),
-                                            comment = comment,
-                                            user = user
-                                        )
-                                    }
-                                }
-                            }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    item {
+                        PostContent(post = post)
+                    }
 
-                            is DetailCommentUiState.Error.Empty -> {
+                    when (commentState) {
+                        is DetailCommentUiState.Success -> {
+                            val comments = commentState.comments
+
+                            if (comments.isEmpty()) {
                                 item {
                                     Text(
                                         text = stringResource(R.string.no_comment),
@@ -180,59 +157,58 @@ fun DetailScreen(
                                         textAlign = TextAlign.Center
                                     )
                                 }
-                            }
-
-                            else -> {
-                                item {
-                                    CircularProgressIndicator(
+                            } else {
+                                items(comments) { comment ->
+                                    CommentContent(
                                         modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp)
-                                            .wrapContentWidth(Alignment.CenterHorizontally)
+                                            .fillMaxWidth(),
+                                        comment = comment
                                     )
                                 }
                             }
                         }
-                    }
-                }
 
-                is DetailPostUiState.Error -> {
-                    when (val errorState = uiState.postState as DetailPostUiState.Error) {
-                        is DetailPostUiState.Error.Empty -> {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
+                        is DetailCommentUiState.Error.Empty -> {
+                            item {
                                 Text(
-                                    text = stringResource(R.string.no_post),
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    text = stringResource(R.string.no_comment),
+                                    modifier = Modifier
+                                        .padding(16.dp)
+                                        .fillMaxWidth(),
                                     textAlign = TextAlign.Center
                                 )
                             }
                         }
 
-                        is DetailPostUiState.Error.Generic -> {
-                            Toast.makeText(context, errorState.message, Toast.LENGTH_SHORT).show()
+                        is DetailCommentUiState.Loading -> {
+                            item {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                        .wrapContentWidth(Alignment.CenterHorizontally)
+                                )
+                            }
                         }
-                        else -> {}
-                    }
-                }
 
-                is DetailPostUiState.Loading -> {
-                    Box(
-                        Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
+                        is DetailCommentUiState.Error.Generic -> {
+                            item {
+                                Text(
+                                    text = stringResource(R.string.error_generic),
+                                    modifier = Modifier
+                                        .padding(16.dp)
+                                        .fillMaxWidth(),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
+
 
 @Composable
 private fun PostContent(
@@ -298,8 +274,7 @@ private fun PostContent(
 
 private fun CommentContent(
     modifier: Modifier = Modifier,
-    comment: Comment,
-    user: User?
+    comment: Comment
 ) {
     Surface(
         color = MaterialTheme.colorScheme.background
@@ -308,23 +283,22 @@ private fun CommentContent(
             modifier = modifier
                 .padding(16.dp)
         ) {
-            user?.displayName?.let {
+            val authorName = comment.author?.displayName ?: stringResource(R.string.unknown_author)
+            Text(
+                text = stringResource(R.string.by, authorName),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Comment section
+            Row {
                 Text(
-                    text = stringResource(R.string.by, it),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    text = comment.content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // Comment section
-                Row {
-                    Text(
-                        text = comment.content,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
             }
         }
     }
@@ -333,7 +307,6 @@ private fun CommentContent(
 @Composable
 private fun DetailScreenContentPreviewable(
     post: Post,
-    user: User,
     comments: List<Comment>,
     modifier: Modifier = Modifier
 ) {
@@ -355,8 +328,7 @@ private fun DetailScreenContentPreviewable(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp),
-                comment = comment,
-                user = user
+                comment = comment
             )
         }
     }
@@ -392,12 +364,6 @@ private fun DetailScreenPreview() {
                         photoUrl = null
                     )
                 )
-            ),
-            user = User(
-                id = "1",
-                displayName = "Toto toto",
-                email = "test@mail.fr",
-                photoUrl = null
             )
         )
     }
@@ -444,12 +410,6 @@ private fun CommentScreenPreview() {
                     email = "test@mail.fr",
                     photoUrl = null
                 )
-            ),
-            user = User(
-                id = "1",
-                displayName = "Toto toto",
-                email = "test@mail.fr",
-                photoUrl = null
             )
         )
     }

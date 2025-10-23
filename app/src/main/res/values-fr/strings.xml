@@ -7,6 +7,7 @@
   <string name="action_sign_out">Déconnexion</string>
   <string name="action_delete_account">Suppression du compte</string>
   <string name="unknown_error">Une erreur inconnue s\'est produite.</string>
+  <string name="unknown_author">Auteur inconnu</string>
   <string name="error">Erreur</string>
   <string name="error_generic">Une erreur est survenue</string>
   <string name="error_no_account_post">Un compte est nécessaire pour ajouter une publication</string>

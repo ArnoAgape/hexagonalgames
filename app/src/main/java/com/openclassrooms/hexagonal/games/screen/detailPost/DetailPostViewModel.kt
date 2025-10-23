@@ -1,5 +1,6 @@
 package com.openclassrooms.hexagonal.games.screen.detailPost
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,7 +8,6 @@ import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.data.repository.CommentRepository
 import com.openclassrooms.hexagonal.games.data.repository.PostRepository
 import com.openclassrooms.hexagonal.games.data.repository.UserRepository
-import com.openclassrooms.hexagonal.games.domain.model.User
 import com.openclassrooms.hexagonal.games.ui.common.Event
 import com.openclassrooms.hexagonal.games.ui.utils.NetworkUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -36,7 +36,6 @@ class DetailPostViewModel @Inject constructor(
     ViewModel() {
 
     private val postId: String = checkNotNull(savedStateHandle["postId"])
-    private val userId = userRepository.getCurrentUser()
 
     private val _events = Channel<Event>()
     val eventsFlow = _events.receiveAsFlow()
@@ -59,7 +58,7 @@ class DetailPostViewModel @Inject constructor(
 
     init {
         observePost()
-        observeComments(postId, userId)
+        observeComments(postId)
     }
 
     private fun observePost() {
@@ -91,7 +90,9 @@ class DetailPostViewModel @Inject constructor(
         }
     }
 
-    private fun observeComments(postId: String, user: User?) {
+    private fun observeComments(postId: String) {
+        Log.d("DetailPostViewModel", ">>> observeComments called with postId = $postId")
+
         commentJob?.cancel()
         commentJob = viewModelScope.launch {
             commentRepository.observeComments(postId)
@@ -110,8 +111,9 @@ class DetailPostViewModel @Inject constructor(
                     }
                 }
                 .collect { comments ->
+                    Log.d("DetailPostViewModel", ">>> Received ${comments.size} comments")
                     val newState = if (comments.isNotEmpty()) {
-                        DetailCommentUiState.Success(comments, user)
+                        DetailCommentUiState.Success(comments)
                     } else {
                         DetailCommentUiState.Error.Empty("No comments found")
                     }
@@ -127,7 +129,7 @@ class DetailPostViewModel @Inject constructor(
                 return@launch
             }
             observePost()
-            observeComments(postId, userId)
+            observeComments(postId)
         }
     }
 

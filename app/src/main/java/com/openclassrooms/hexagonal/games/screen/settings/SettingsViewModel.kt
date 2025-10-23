@@ -1,25 +1,37 @@
 package com.openclassrooms.hexagonal.games.screen.settings
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.google.firebase.messaging.FirebaseMessaging
+import com.openclassrooms.hexagonal.games.data.repository.SettingsRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /**
  * ViewModel responsible for managing user settings, specifically notification preferences.
  */
-class SettingsViewModel : ViewModel() {
-  /**
-   * Enables notifications for the application.
-   * TODO: Implement the logic to enable notifications, likely involving interactions with a notification manager.
-   */
+@HiltViewModel
+class SettingsViewModel @Inject constructor(
+  private val settingsRepository: SettingsRepository
+) : ViewModel() {
+
+  val notificationsEnabled = settingsRepository.notificationsEnabled
+    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+
   fun enableNotifications() {
-    //TODO
+    viewModelScope.launch {
+      settingsRepository.setNotificationsEnabled(true)
+      FirebaseMessaging.getInstance().subscribeToTopic("global")
+    }
   }
-  
-  /**
-   * Disables notifications for the application.
-   * TODO: Implement the logic to disable notifications, likely involving interactions with a notification manager.
-   */
+
   fun disableNotifications() {
-    //TODO
+    viewModelScope.launch {
+      settingsRepository.setNotificationsEnabled(false)
+      FirebaseMessaging.getInstance().unsubscribeFromTopic("global")
+    }
   }
-  
 }

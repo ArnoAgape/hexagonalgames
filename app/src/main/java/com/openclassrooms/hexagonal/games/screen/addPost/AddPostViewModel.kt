@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.data.repository.PostRepository
-import com.openclassrooms.hexagonal.games.data.repository.UserRepository
 import com.openclassrooms.hexagonal.games.domain.model.Post
+import com.openclassrooms.hexagonal.games.domain.model.User
 import com.openclassrooms.hexagonal.games.ui.common.Event
 import com.openclassrooms.hexagonal.games.ui.utils.NetworkUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -29,13 +29,12 @@ import javax.inject.Inject
 @HiltViewModel
 class AddPostViewModel @Inject constructor(
     private val postRepository: PostRepository,
-    userRepository: UserRepository,
     private val networkUtils: NetworkUtils
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AddPostUiState>(AddPostUiState.Idle)
     val uiState: StateFlow<AddPostUiState> = _uiState.asStateFlow()
-    private val _user = MutableStateFlow(userRepository.getCurrentUser())
+    private val _user = MutableStateFlow<User?>(null)
     private val _events = Channel<Event>()
     val eventsFlow = _events.receiveAsFlow()
     private val _post = MutableStateFlow(
