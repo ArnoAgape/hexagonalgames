@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserApi {
     suspend fun getCurrentUser(): User?
+    fun observeCurrentUser(): Flow<User?>
     suspend fun ensureUserInFirestore(): Result<Unit>
     fun signOut(): Result<Unit>
     fun isUserSignedIn(): Flow<Boolean>

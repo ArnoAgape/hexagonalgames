@@ -44,16 +44,22 @@ class FirebasePostApi @Inject constructor(private val networkUtils: NetworkUtils
             throw IOException("No internet connection")
         }
         try {
-            postsCollection
-                .document(post.id)
-                .set(post)
-                .await()
+            var updatedPost = post
             post.photoUrl?.let { uriString ->
                 val uri = uriString.toUri()
-                uploadImageToFirebase(uri)
+                if (uri.scheme == "content") {
+                    val downloadUrl = uploadImageToFirebase(uri)
+                    if (downloadUrl != null) {
+                        updatedPost = post.copy(photoUrl = downloadUrl)
+                    }
+                }
             }
-
+            postsCollection
+                .document(updatedPost.id)
+                .set(updatedPost)
+                .await()
         } catch (e: Exception) {
+            Log.e("FirebasePostApi", "Error while adding post", e)
             throw e
         }
     }
@@ -99,9 +105,7 @@ class FirebasePostApi @Inject constructor(private val networkUtils: NetworkUtils
                     .child("images/${System.currentTimeMillis()}.jpg")
 
                 fileRef.putFile(uri).await()
-
                 val downloadUrl = fileRef.downloadUrl.await()
-
                 downloadUrl.toString()
             } catch (e: Exception) {
                 Log.e("FirebaseUpload", "Error while uploading the picture", e)

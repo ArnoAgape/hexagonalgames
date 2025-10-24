@@ -29,6 +29,15 @@ class FirebaseUserApi : UserApi {
         return auth.currentUser?.toDomain()
     }
 
+    override fun observeCurrentUser(): Flow<User?> = callbackFlow {
+        val listener = FirebaseAuth.AuthStateListener { auth ->
+            trySend(auth.currentUser?.toDomain())
+        }
+        auth.addAuthStateListener(listener)
+        awaitClose { auth.removeAuthStateListener(listener) }
+    }
+
+
     override suspend fun ensureUserInFirestore(): Result<Unit> {
         val firebaseUser = auth.currentUser ?: return Result.failure(Exception("User not signed in"))
         val user = firebaseUser.toDomain()

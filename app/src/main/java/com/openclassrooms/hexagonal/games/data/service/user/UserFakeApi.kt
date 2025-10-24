@@ -27,6 +27,10 @@ class UserFakeApi : UserApi {
 
     override suspend fun getCurrentUser(): User? = _currentUser.value
 
+    override fun observeCurrentUser(): Flow<User?> {
+        return currentUser
+    }
+
     override suspend fun ensureUserInFirestore(): Result<Unit> {
         val user = _currentUser.value ?: return Result.failure(Exception("User not signed in"))
         return try {
