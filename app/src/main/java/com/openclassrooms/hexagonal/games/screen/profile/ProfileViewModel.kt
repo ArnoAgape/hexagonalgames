@@ -1,5 +1,6 @@
 package com.openclassrooms.hexagonal.games.screen.profile
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.openclassrooms.hexagonal.games.data.repository.UserRepository
@@ -23,6 +24,8 @@ class ProfileViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
+            val currentUser = userRepository.getCurrentUser()
+            Log.d("ProfileViewModel", ">>> Current user = $currentUser")
             _user.value = userRepository.getCurrentUser()
         }
     }

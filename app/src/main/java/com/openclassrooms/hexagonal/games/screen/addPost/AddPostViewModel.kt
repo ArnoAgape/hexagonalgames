@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.data.repository.PostRepository
+import com.openclassrooms.hexagonal.games.data.repository.UserRepository
 import com.openclassrooms.hexagonal.games.domain.model.Post
 import com.openclassrooms.hexagonal.games.domain.model.User
 import com.openclassrooms.hexagonal.games.ui.common.Event
@@ -29,6 +30,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AddPostViewModel @Inject constructor(
     private val postRepository: PostRepository,
+    private val userRepository: UserRepository,
     private val networkUtils: NetworkUtils
 ) : ViewModel() {
 
@@ -66,6 +68,12 @@ class AddPostViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = false,
     )
+
+    init {
+        viewModelScope.launch {
+            _user.value = userRepository.getCurrentUser()
+        }
+    }
 
     /**
      * Handles form events like title and description changes.

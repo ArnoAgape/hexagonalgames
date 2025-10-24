@@ -218,6 +218,8 @@ private fun HomefeedCell(
         Column(
             modifier = Modifier.padding(8.dp),
         ) {
+
+            // Author
             Text(
                 text = stringResource(
                     id = R.string.by,
@@ -269,7 +271,7 @@ private fun HomefeedCellPreview() {
                 timestamp = 1,
                 author = User(
                     id = "1",
-                    displayName = "displayName",
+                    displayName = "Toto toto",
                     email = "test@mail.fr",
                     photoUrl = null
                 )
@@ -292,7 +294,7 @@ private fun HomefeedCellImagePreview() {
                 timestamp = 1,
                 author = User(
                     id = "1",
-                    displayName = "displayName",
+                    displayName = "Toto Toto",
                     email = "test@mail.fr",
                     photoUrl = null
                 )

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.data.repository.CommentRepository
+import com.openclassrooms.hexagonal.games.data.repository.UserRepository
 import com.openclassrooms.hexagonal.games.domain.model.Comment
 import com.openclassrooms.hexagonal.games.domain.model.User
 import com.openclassrooms.hexagonal.games.screen.addPost.FormEvent
@@ -26,6 +27,7 @@ import javax.inject.Inject
 @HiltViewModel
 class AddCommentViewModel @Inject constructor(
     private val commentRepository: CommentRepository,
+    private val userRepository: UserRepository,
     private val networkUtils: NetworkUtils
 ) : ViewModel() {
 
@@ -63,6 +65,12 @@ class AddCommentViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = false,
     )
+
+    init {
+        viewModelScope.launch {
+            _user.value = userRepository.getCurrentUser()
+        }
+    }
 
     /**
      * Handles an empty comment.

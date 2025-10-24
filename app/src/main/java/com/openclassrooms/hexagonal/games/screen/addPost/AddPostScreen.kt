@@ -69,19 +69,13 @@ fun AddPostScreen(
     val isPostValid by viewModel.isPostValid.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // When an error occurs
+    // Any toast (comment added, no network...)
     EventsEffect(viewModel.eventsFlow) { event ->
         when (event) {
             is Event.ShowToast -> {
                 Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                onSaveClick()
             }
-        }
-    }
-
-    LaunchedEffect(uiState) {
-        if (uiState is AddPostUiState.Success) {
-            Toast.makeText(context, context.getString(R.string.post_success), Toast.LENGTH_SHORT).show()
-            onSaveClick()
         }
     }
 
