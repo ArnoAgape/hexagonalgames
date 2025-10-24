@@ -98,9 +98,16 @@ The project includes **unit tests** to ensure reliable and predictable behavior.
 ## 📸 Screenshots
 
 <p align="center">
-  <img src="images/phoneScreenshots/phone_1.png" alt="Phone 1" width="30%"/>
-  <img src="images/phoneScreenshots/phone_2.png" alt="Phone 2" width="30%"/>
-  <img src="images/phoneScreenshots/phone_3.png" alt="Phone 3" width="30%"/>
+  <img src="images/ss1.png" alt="Phone 1" width="30%"/>
+  <img src="images/ss2.png" alt="Phone 2" width="30%"/>
+  <img src="images/ss2_5.png" alt="Phone 3" width="30%"/>
+  <img src="images/ss3.png" alt="Phone 3" width="30%"/>
+  <img src="images/ss4.png" alt="Phone 3" width="30%"/>
+  <img src="images/ss5.png" alt="Phone 3" width="30%"/>
+  <img src="images/ss6.png" alt="Phone 3" width="30%"/>
+  <img src="images/ss7.png" alt="Phone 3" width="30%"/>
+  <img src="images/ss8.png" alt="Phone 3" width="30%"/>
+  <img src="images/ss9.png" alt="Phone 3" width="30%"/>
 </p>
 
 ## 📲 Installation
