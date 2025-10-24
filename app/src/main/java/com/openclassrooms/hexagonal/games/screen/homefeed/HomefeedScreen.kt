@@ -227,10 +227,12 @@ private fun HomefeedCell(
                 ),
                 style = MaterialTheme.typography.titleSmall
             )
+            Spacer(Modifier.height(8.dp))
             Text(
                 text = post.title,
                 style = MaterialTheme.typography.titleLarge
             )
+            Spacer(Modifier.height(8.dp))
             if (post.photoUrl != null) {
                 AsyncImage(
                     modifier = Modifier
@@ -260,36 +262,13 @@ private fun HomefeedCell(
 
 @PreviewLightDark
 @Composable
-private fun HomefeedCellPreview() {
-    HexagonalGamesTheme {
-        HomefeedCell(
-            post = Post(
-                id = "1",
-                title = "title",
-                description = "description",
-                photoUrl = null,
-                timestamp = 1,
-                author = User(
-                    id = "1",
-                    displayName = "Toto toto",
-                    email = "test@mail.fr",
-                    photoUrl = null
-                )
-            ),
-            onPostClick = {}
-        )
-    }
-}
-
-@PreviewLightDark
-@Composable
 private fun HomefeedCellImagePreview() {
     HexagonalGamesTheme {
         HomefeedCell(
             post = Post(
                 id = "1",
                 title = "title",
-                description = null,
+                description = "New game released last year, you have to try it!",
                 photoUrl = "https://picsum.photos/id/85/1080/",
                 timestamp = 1,
                 author = User(
