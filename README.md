@@ -1,6 +1,6 @@
 <div align="center">
 <br />
-<img src="app/src/main/ic_launcher-playstore.png" alt="HexagonalGames Logo"/>
+<img src="app/src/main/ic_launcher-playstore.png" alt="HexagonalGames Logo" width="200", height="200"/>
 </div>
 
 # 🎮 HexagonalGames - Gaming-related posts App
