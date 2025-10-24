@@ -15,23 +15,22 @@ import kotlinx.coroutines.launch
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-  private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
-  val notificationsEnabled = settingsRepository.notificationsEnabled
-    .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
+    val notificationsEnabled = settingsRepository.notificationsEnabled
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), true)
 
-  fun enableNotifications() {
-    viewModelScope.launch {
-      settingsRepository.setNotificationsEnabled(true)
-      FirebaseMessaging.getInstance().subscribeToTopic("global")
+    fun toggleNotifications(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setNotificationsEnabled(enabled)
+            val fcm = FirebaseMessaging.getInstance()
+            if (enabled) {
+                fcm.subscribeToTopic("global")
+            } else {
+                fcm.unsubscribeFromTopic("global")
+            }
+        }
     }
-  }
-
-  fun disableNotifications() {
-    viewModelScope.launch {
-      settingsRepository.setNotificationsEnabled(false)
-      FirebaseMessaging.getInstance().unsubscribeFromTopic("global")
-    }
-  }
 }
+

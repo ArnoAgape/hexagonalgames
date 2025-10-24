@@ -16,6 +16,7 @@ import com.openclassrooms.hexagonal.games.ui.MainActivity
 
 class NotificationService : FirebaseMessagingService() {
 
+
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
