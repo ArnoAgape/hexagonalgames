@@ -11,9 +11,9 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * Fake API simulant la logique de FirebaseUserApi pour les tests ou le mode hors-ligne.
  */
-class UserFakeApi : UserApi {
+object UserFakeApi : UserApi {
 
-    private val users = mutableListOf(
+    val users = mutableListOf(
         User("1", "Gerry", "gerry@example.com"),
         User("2", "Brenton", "brenton@example.com"),
         User("3", "Wally", "wally@example.com")

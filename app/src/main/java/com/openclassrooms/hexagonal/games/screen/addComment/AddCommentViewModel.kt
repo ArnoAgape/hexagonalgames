@@ -34,6 +34,8 @@ class AddCommentViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AddCommentUiState>(AddCommentUiState.Idle)
     val uiState: StateFlow<AddCommentUiState> = _uiState.asStateFlow()
     private val _user = MutableStateFlow<User?>(null)
+    val user: StateFlow<User?> = _user.asStateFlow()
+
     private val _events = Channel<Event>()
     val eventsFlow = _events.receiveAsFlow()
 
@@ -101,30 +103,26 @@ class AddCommentViewModel @Inject constructor(
 
             _uiState.value = AddCommentUiState.Loading
 
+            val currentUser = _user.value
+            if (currentUser == null) {
+                _uiState.value = AddCommentUiState.Error.NoAccount()
+                _events.trySend(Event.ShowToast(R.string.error_no_account_comment))
+                return@launch
+            }
+
             try {
-                val commentToSave = _comment.value.copy(author = _user.value)
+                val commentToSave = _comment.value.copy(author = currentUser)
                 commentRepository.addComment(postId, commentToSave)
 
                 _uiState.value = AddCommentUiState.Success(commentToSave)
                 _events.trySend(Event.ShowToast(R.string.comment_success))
 
-            } catch (e: Exception) {
-                when (e) {
-                    is IllegalStateException -> {
-                        _uiState.value = AddCommentUiState.Error.NoAccount()
-                        _events.trySend(Event.ShowToast(R.string.error_no_account_comment))
-                    }
-
-                    is IOException -> {
-                        _uiState.value = AddCommentUiState.Error.Generic("Network error: ${e.message}")
-                        _events.trySend(Event.ShowToast(R.string.no_network))
-                    }
-
-                    else -> {
-                        _uiState.value = AddCommentUiState.Error.Generic()
-                        _events.trySend(Event.ShowToast(R.string.error_generic))
-                    }
-                }
+            } catch (e: IOException) {
+                _uiState.value = AddCommentUiState.Error.Generic("Network error: ${e.message}")
+                _events.trySend(Event.ShowToast(R.string.no_network))
+            } catch (_: Exception) {
+                _uiState.value = AddCommentUiState.Error.Generic()
+                _events.trySend(Event.ShowToast(R.string.error_generic))
             }
         }
     }

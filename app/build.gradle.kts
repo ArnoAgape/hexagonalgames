@@ -84,6 +84,10 @@ dependencies {
   implementation(libs.accompanist.permissions)
 
   testImplementation(libs.junit)
+  testImplementation(libs.turbine)
+  testImplementation(libs.mockk)
+  testImplementation (libs.kotlinx.coroutines.test)
+  testImplementation(kotlin("test"))
   androidTestImplementation(libs.ext.junit)
   androidTestImplementation(libs.espresso.core)
 }

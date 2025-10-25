@@ -12,14 +12,14 @@ import kotlinx.coroutines.flow.mapNotNull
  * This class implements the PostApi interface and provides a fake in-memory data source for Posts.
  * It's intended for testing purposes and simulates a real API.
  */
-class PostFakeApi : PostApi {
+object PostFakeApi : PostApi {
     private val users = mutableListOf(
         User("1", "Gerry Ariella", "gariella@mail.com"),
         User("2", "Brenton Capri", "bcapri@mail.com"),
         User("3", "Wally Claud", "wclaud@mail.com")
     )
 
-    private val posts = MutableStateFlow(
+    val posts = MutableStateFlow(
         mutableListOf(
             Post(
                 "5",
