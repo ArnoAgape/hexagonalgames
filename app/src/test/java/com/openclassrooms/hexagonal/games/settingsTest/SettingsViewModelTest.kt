@@ -1,6 +1,7 @@
 package com.openclassrooms.hexagonal.games.settingsTest
 
 import com.google.firebase.messaging.FirebaseMessaging
+import com.openclassrooms.hexagonal.games.MainDispatcherRule
 import com.openclassrooms.hexagonal.games.data.repository.SettingsRepository
 import com.openclassrooms.hexagonal.games.screen.settings.SettingsViewModel
 import io.mockk.every
@@ -15,19 +16,21 @@ import org.junit.Before
 import io.mockk.MockKAnnotations
 import io.mockk.coVerify
 import io.mockk.unmockkAll
-import kotlinx.coroutines.test.advanceUntilIdle
+import org.junit.Rule
 import kotlin.test.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
 
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
     private lateinit var viewModel: SettingsViewModel
-    private lateinit var repository: SettingsRepository
+    private lateinit var settingsRepo: SettingsRepository
 
     @Before
     fun setup() {
         MockKAnnotations.init(this)
-        repository = mockk(relaxed = true)
+        settingsRepo = mockk(relaxed = true)
     }
 
     @After
@@ -42,14 +45,13 @@ class SettingsViewModelTest {
         val mockFcm = mockk<FirebaseMessaging>(relaxed = true)
         every { FirebaseMessaging.getInstance() } returns mockFcm
 
-        viewModel = SettingsViewModel(repository)
+        viewModel = SettingsViewModel(settingsRepo)
 
         // Act
         viewModel.toggleNotifications(true)
-        advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { repository.setNotificationsEnabled(true) }
+        coVerify(exactly = 1) { settingsRepo.setNotificationsEnabled(true) }
         verify(exactly = 1) { mockFcm.subscribeToTopic("global") }
         verify(exactly = 0) { mockFcm.unsubscribeFromTopic(any()) }
 
@@ -63,14 +65,13 @@ class SettingsViewModelTest {
         val mockFcm = mockk<FirebaseMessaging>(relaxed = true)
         every { FirebaseMessaging.getInstance() } returns mockFcm
 
-        viewModel = SettingsViewModel(repository)
+        viewModel = SettingsViewModel(settingsRepo)
 
         // Act
         viewModel.toggleNotifications(false)
-        advanceUntilIdle()
 
         // Assert
-        coVerify(exactly = 1) { repository.setNotificationsEnabled(false) }
+        coVerify(exactly = 1) { settingsRepo.setNotificationsEnabled(false) }
         verify(exactly = 1) { mockFcm.unsubscribeFromTopic("global") }
         verify(exactly = 0) { mockFcm.subscribeToTopic(any()) }
 

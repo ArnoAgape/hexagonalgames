@@ -2,9 +2,10 @@ package com.openclassrooms.hexagonal.games.addCommentTest
 
 import app.cash.turbine.test
 import com.openclassrooms.hexagonal.games.MainDispatcherRule
+import com.openclassrooms.hexagonal.games.R
+import com.openclassrooms.hexagonal.games.TestUtils
 import com.openclassrooms.hexagonal.games.data.repository.CommentRepository
 import com.openclassrooms.hexagonal.games.data.repository.UserRepository
-import com.openclassrooms.hexagonal.games.data.service.user.UserFakeApi.users
 import com.openclassrooms.hexagonal.games.screen.addComment.AddCommentUiState
 import com.openclassrooms.hexagonal.games.screen.addComment.AddCommentViewModel
 import com.openclassrooms.hexagonal.games.screen.addPost.FormEvent
@@ -42,7 +43,7 @@ class AddCommentViewModelTest {
         userRepo = mockk()
         fakeNetwork = mockk()
 
-        coEvery { userRepo.getCurrentUser() } returns users[0]
+        coEvery { userRepo.getCurrentUser() } returns TestUtils.fakeUser("1")
 
         viewModel = AddCommentViewModel(commentRepo, userRepo, fakeNetwork)
     }
@@ -62,7 +63,6 @@ class AddCommentViewModelTest {
         viewModel.onAction(FormEvent.CommentChanged("test"))
 
         viewModel.isCommentValid.test {
-            skipItems(1) // initialValue = false
             assertTrue(awaitItem())
         }
     }
@@ -70,8 +70,8 @@ class AddCommentViewModelTest {
     @Test
     fun `init loads current user from repository`() = runTest {
         viewModel.user.test {
-            skipItems(1) // initialValue = null
-            assertEquals("Gerry", viewModel.user.value?.displayName)
+            assertEquals("Gerry Ariella", viewModel.user.value?.displayName)
+            cancelAndConsumeRemainingEvents()
         }
     }
 
@@ -83,13 +83,13 @@ class AddCommentViewModelTest {
             viewModel.onSaveClicked("0")
 
             val event = awaitItem()
-            assertTrue(event is Event.ShowToast)
+            assertEquals(R.string.error_comment, (event as Event.ShowToast).message)
         }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `addComment emits Success when repository succeeds`() = runTest(mainDispatcherRule.testDispatcher) {
+    fun `addComment emits Success when repository succeeds`() = runTest {
         // Arrange
         coEvery { commentRepo.addComment(any(), any()) } just Runs
         coEvery { fakeNetwork.isNetworkAvailable() } returns true

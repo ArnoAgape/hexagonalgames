@@ -1,27 +1,34 @@
 package com.openclassrooms.hexagonal.games.profileTest
 
+import androidx.lifecycle.viewModelScope
 import app.cash.turbine.test
+import com.openclassrooms.hexagonal.games.MainDispatcherRule
+import com.openclassrooms.hexagonal.games.TestUtils
 import com.openclassrooms.hexagonal.games.data.repository.PostRepository
 import com.openclassrooms.hexagonal.games.data.repository.UserRepository
 import com.openclassrooms.hexagonal.games.domain.model.User
 import com.openclassrooms.hexagonal.games.screen.profile.ProfileViewModel
 import com.openclassrooms.hexagonal.games.ui.utils.NetworkUtils
+import io.mockk.clearAllMocks
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModelTest {
 
+    @get:Rule
+    val mainDispatcherRule = MainDispatcherRule()
     private lateinit var viewModel: ProfileViewModel
     private lateinit var postRepo: PostRepository
     private lateinit var userRepo: UserRepository
@@ -29,24 +36,29 @@ class ProfileViewModelTest {
 
     @Before
     fun setup() {
-        postRepo = mockk()
         userRepo = mockk()
+        postRepo = mockk()
         fakeNetwork = mockk()
 
-        coEvery { userRepo.isUserSignedIn() } returns flowOf(true)
-        coEvery { fakeNetwork.isNetworkAvailable() } returns true
-        every { postRepo.posts } returns flowOf(emptyList())
+        every { userRepo.observeCurrentUser() } returns flowOf(null)
+        every { userRepo.isUserSignedIn() } returns flowOf(true)
 
         viewModel = ProfileViewModel(userRepo)
+    }
+
+    @After
+    fun tearDown() {
+        viewModel.viewModelScope.cancel()
+        clearAllMocks()
     }
 
     @Test
     fun `user flow updates when repository emits new user`() = runTest {
         // Arrange
-        val fakeUser = User("1", "Alice", "alice@mail.com")
+        val fakeUser = TestUtils.fakeUser("1")
         val userFlow = MutableSharedFlow<User?>()
+
         every { userRepo.observeCurrentUser() } returns userFlow
-        every { userRepo.isUserSignedIn() } returns flowOf(true)
 
         // Act
         viewModel = ProfileViewModel(userRepo)
@@ -76,6 +88,4 @@ class ProfileViewModelTest {
         // Assert
         coVerify(exactly = 1) { userRepo.ensureUserInFirestore() }
     }
-
-
 }

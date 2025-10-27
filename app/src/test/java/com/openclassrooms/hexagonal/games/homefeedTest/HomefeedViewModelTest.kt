@@ -9,12 +9,11 @@ import com.openclassrooms.hexagonal.games.ui.common.Event
 import com.openclassrooms.hexagonal.games.ui.utils.NetworkUtils
 import app.cash.turbine.test
 import com.openclassrooms.hexagonal.games.R
-import com.openclassrooms.hexagonal.games.domain.model.User
+import com.openclassrooms.hexagonal.games.TestUtils
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkClass
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -22,7 +21,6 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class HomefeedViewModelTest {
 
     private lateinit var viewModel: HomefeedViewModel
@@ -45,16 +43,7 @@ class HomefeedViewModelTest {
 
     @Test
     fun `uiState is Success when repository returns posts`() = runTest {
-        val fakePosts = listOf(
-            Post(
-                "5",
-                "The Secret of the Flowers",
-                "Improve your goldfish's physical fitness by getting him a bicycle.",
-                null,
-                1629858873, // 25/08/2021
-                User("1", "Gerry Ariella", "gariella@mail.com")
-            )
-        )
+        val fakePosts = listOf(TestUtils.fakePost("1"))
         every { postRepo.posts } returns flowOf(fakePosts)
 
         viewModel = HomefeedViewModel(postRepo, userRepo, fakeNetwork)

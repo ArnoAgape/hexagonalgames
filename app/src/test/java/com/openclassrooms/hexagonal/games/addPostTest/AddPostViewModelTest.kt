@@ -3,9 +3,9 @@ package com.openclassrooms.hexagonal.games.addPostTest
 import android.net.Uri
 import app.cash.turbine.test
 import com.openclassrooms.hexagonal.games.MainDispatcherRule
+import com.openclassrooms.hexagonal.games.TestUtils
 import com.openclassrooms.hexagonal.games.data.repository.PostRepository
 import com.openclassrooms.hexagonal.games.data.repository.UserRepository
-import com.openclassrooms.hexagonal.games.data.service.user.UserFakeApi.users
 import com.openclassrooms.hexagonal.games.screen.addPost.AddPostUiState
 import com.openclassrooms.hexagonal.games.screen.addPost.AddPostViewModel
 import com.openclassrooms.hexagonal.games.screen.addPost.FormEvent
@@ -20,7 +20,6 @@ import io.mockk.mockk
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -44,7 +43,7 @@ class AddPostViewModelTest {
         userRepo = mockk()
         fakeNetwork = mockk()
 
-        coEvery { userRepo.getCurrentUser() } returns users[0]
+        coEvery { userRepo.getCurrentUser() } returns TestUtils.fakeUser("1")
 
         viewModel = AddPostViewModel(postRepo, userRepo, fakeNetwork)
     }
@@ -71,7 +70,6 @@ class AddPostViewModelTest {
         viewModel.onAction(FormEvent.PhotoChanged(mockUri))
 
         viewModel.isPostValid.test {
-            skipItems(1) // initialValue = false
             assertTrue(awaitItem())
         }
     }
@@ -90,7 +88,7 @@ class AddPostViewModelTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `addPost emits Success when repository succeeds`() = runTest(mainDispatcherRule.testDispatcher) {
+    fun `addPost emits Success when repository succeeds`() = runTest {
         // Arrange
         coEvery { postRepo.addPost(any()) } just Runs
         coEvery { fakeNetwork.isNetworkAvailable() } returns true
@@ -100,8 +98,6 @@ class AddPostViewModelTest {
 
         // Act
         viewModel.addPost()
-
-        advanceUntilIdle()
 
         // Assert
         val uiState = viewModel.uiState.value
@@ -127,7 +123,7 @@ class AddPostViewModelTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `addPost emits Generic error when repository throws`() = runTest(mainDispatcherRule.testDispatcher) {
+    fun `addPost emits Generic error when repository throws`() = runTest {
         // Arrange
         coEvery { fakeNetwork.isNetworkAvailable() } returns true
         coEvery { postRepo.addPost(any()) } throws Exception("DB error")
@@ -136,7 +132,6 @@ class AddPostViewModelTest {
 
         // Act
         viewModel.addPost()
-        advanceUntilIdle()
 
         // Assert
         val state = viewModel.uiState.value
