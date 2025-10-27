@@ -86,6 +86,7 @@ dependencies {
   testImplementation(libs.junit)
   testImplementation(libs.turbine)
   testImplementation(libs.mockk)
+  testImplementation(libs.datastore.preferences)
   testImplementation (libs.kotlinx.coroutines.test)
   testImplementation(kotlin("test"))
   androidTestImplementation(libs.ext.junit)

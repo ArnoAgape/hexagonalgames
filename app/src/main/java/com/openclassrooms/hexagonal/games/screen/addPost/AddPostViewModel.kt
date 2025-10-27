@@ -37,6 +37,7 @@ class AddPostViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AddPostUiState>(AddPostUiState.Idle)
     val uiState: StateFlow<AddPostUiState> = _uiState.asStateFlow()
     private val _user = MutableStateFlow<User?>(null)
+    val user: StateFlow<User?> = _user.asStateFlow()
     private val _events = Channel<Event>()
     val eventsFlow = _events.receiveAsFlow()
     private val _post = MutableStateFlow(
@@ -145,22 +146,32 @@ class AddPostViewModel @Inject constructor(
             }
         }
     }
-        fun onSaveClicked() {
-            val post = _post.value
-            when {
-                post.title.isBlank() -> {
-                    _events.trySend(Event.ShowToast(R.string.error_title))
-                }
 
-                post.description.isNullOrBlank() && post.photoUrl == null -> {
-                    _events.trySend(Event.ShowToast(R.string.error_description))
-                }
+    /**
+     * Handles validation and submission logic for saving a new Post.
+     *
+     * This function verifies that the required fields are not empty before attempting
+     * to add the post. If any validation fails, it emits a toast event with a corresponding
+     * error message. Otherwise, it proceeds to call [addPost].
+     *
+     * Validation rules:
+     * - Title cannot be blank.
+     * - Either a description or a photo must be provided.
+     */
+    fun onSaveClicked() {
+        val post = _post.value
+        when {
+            post.title.isBlank() -> {
+                _events.trySend(Event.ShowToast(R.string.error_title))
+            }
 
-                else -> {
-                    addPost()
-                }
+            post.description.isNullOrBlank() && post.photoUrl == null -> {
+                _events.trySend(Event.ShowToast(R.string.error_description))
+            }
+
+            else -> {
+                addPost()
             }
         }
-
-
     }
+}

@@ -1,6 +1,5 @@
 package com.openclassrooms.hexagonal.games.screen.detailPost
 
-import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +24,22 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * ViewModel responsible for managing the state of the Post detail screen.
+ *
+ * This ViewModel combines data from both [PostRepository] and [CommentRepository]
+ * to display a single Post and its associated comments. It also observes the
+ * user's sign-in status through [UserRepository].
+ *
+ * Key responsibilities:
+ * - Observes the Post details in real time.
+ * - Observes and updates the list of comments related to the Post.
+ * - Handles data refresh operations while ensuring network availability.
+ * - Emits [Event]s (e.g., toast messages) to the UI for feedback.
+ *
+ * The current UI state is represented as a [DetailUiState], which encapsulates
+ * both [DetailPostUiState] and [DetailCommentUiState].
+ */
 @HiltViewModel
 class DetailPostViewModel @Inject constructor(
     private val postRepository: PostRepository,
@@ -91,7 +106,6 @@ class DetailPostViewModel @Inject constructor(
     }
 
     private fun observeComments(postId: String) {
-        Log.d("DetailPostViewModel", ">>> observeComments called with postId = $postId")
 
         commentJob?.cancel()
         commentJob = viewModelScope.launch {
@@ -111,7 +125,6 @@ class DetailPostViewModel @Inject constructor(
                     }
                 }
                 .collect { comments ->
-                    Log.d("DetailPostViewModel", ">>> Received ${comments.size} comments")
                     val newState = if (comments.isNotEmpty()) {
                         DetailCommentUiState.Success(comments)
                     } else {
@@ -135,7 +148,16 @@ class DetailPostViewModel @Inject constructor(
 
 }
 
-
+/**
+ * Represents the combined UI state for the Post detail screen.
+ *
+ * This data class holds two distinct UI states:
+ * - [postState]: The current state of the Post being displayed.
+ * - [commentState]: The current state of the associated comments.
+ *
+ * It provides a unified structure for managing and rendering both pieces
+ * of information in a single reactive stream.
+ */
 data class DetailUiState(
     val postState: DetailPostUiState,
     val commentState: DetailCommentUiState

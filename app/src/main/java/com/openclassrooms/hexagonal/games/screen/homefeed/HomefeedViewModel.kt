@@ -29,28 +29,47 @@ class HomefeedViewModel @Inject constructor(
     private val postRepository: PostRepository,
     userRepository: UserRepository,
     private val networkUtils: NetworkUtils
-) :
-    ViewModel() {
+) : ViewModel() {
 
+    /** Holds the current state of the home feed UI (loading, success, or error). */
     private val _uiState = MutableStateFlow<PostUiState>(PostUiState.Loading)
+
+    /** Publicly exposed immutable flow for observing post-related UI states. */
     val uiState: StateFlow<PostUiState> = _uiState
 
+    /** Channel used for one-time UI events such as displaying toasts. */
     private val _events = Channel<Event>()
+
+    /** Flow that emits UI events (e.g., toast messages). */
     val eventsFlow = _events.receiveAsFlow()
 
+    /** Observes whether a user is currently signed in. */
     val isUserSignedIn =
         userRepository.isUserSignedIn()
             .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
+    /**
+     * Initializes the ViewModel by fetching all posts from the repository.
+     */
     init {
         getAllPosts()
     }
 
+    /**
+     * Fetches all posts from [PostRepository] and updates the [_uiState] accordingly.
+     *
+     * - Sets the UI state to [PostUiState.Loading] before starting.
+     * - If the repository emits an error, switches to [PostUiState.Error.Generic].
+     * - If the post list is empty, switches to [PostUiState.Error.Empty].
+     * - Otherwise, emits [PostUiState.Success] with the loaded posts.
+     */
     private fun getAllPosts() {
         viewModelScope.launch {
             postRepository.posts
                 .onStart { _uiState.value = PostUiState.Loading }
-                .catch { e -> _uiState.value = PostUiState.Error.Generic(e.message ?: "Unknown error") }
+                .catch { e ->
+                    _uiState.value = PostUiState.Error.Generic(e.message ?: "Unknown error")
+                }
                 .collect { posts ->
                     _uiState.value = if (posts.isEmpty()) {
                         PostUiState.Error.Empty()
@@ -61,6 +80,12 @@ class HomefeedViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Refreshes the list of posts from the repository.
+     *
+     * If no network connection is available, it emits an [Event.ShowToast] with
+     * a "no network" message and cancels the refresh operation.
+     */
     fun refreshPosts() {
         viewModelScope.launch {
             if (!networkUtils.isNetworkAvailable()) {

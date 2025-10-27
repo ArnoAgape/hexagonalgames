@@ -24,6 +24,21 @@ import java.io.IOException
 import java.util.UUID
 import javax.inject.Inject
 
+/**
+ * ViewModel responsible for handling comment creation logic.
+ *
+ * This ViewModel manages the process of adding comments to a specific post, handling
+ * both local validation and repository operations. It interacts with:
+ * - [CommentRepository] for storing comments.
+ * - [UserRepository] for verifying if the user is signed in.
+ * - [NetworkUtils] for ensuring network availability.
+ *
+ * It exposes a [StateFlow] representing the current [AddCommentUiState],
+ * and emits [Event]s (e.g., toast messages) through a [Channel] for UI feedback.
+ *
+ * The ViewModel also holds user state information to determine if comment
+ * actions are permitted based on authentication status.
+ */
 @HiltViewModel
 class AddCommentViewModel @Inject constructor(
     private val commentRepository: CommentRepository,
@@ -127,6 +142,17 @@ class AddCommentViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Handles validation and submission logic for saving a new Comment.
+     *
+     * This function verifies that the required fields are not empty before attempting
+     * to add the comment. If any validation fails, it emits a toast event with a corresponding
+     * error message. Otherwise, it proceeds to call [addComment].
+     *
+     * Validation rules:
+     * - Title cannot be blank.
+     * - Either a description or a photo must be provided.
+     */
     fun onSaveClicked(postId: String) {
         val comment = _comment.value
         when {

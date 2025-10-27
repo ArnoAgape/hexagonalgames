@@ -15,6 +15,28 @@ import com.google.firebase.auth.FirebaseAuth
 import com.openclassrooms.hexagonal.games.R
 import com.openclassrooms.hexagonal.games.screen.Screen
 
+/**
+ * Remembers and returns a lambda function that launches the Firebase Authentication
+ * sign-in flow using FirebaseUI.
+ *
+ * This composable encapsulates the logic for initiating a sign-in intent and
+ * handling its result, including successful login, user cancellation, and errors.
+ *
+ * When authentication succeeds:
+ * - The [ProfileViewModel.syncUserWithFirestore] function is called to ensure the
+ *   user's data is synchronized with Firestore.
+ * - A success message is shown via [showMessage].
+ * - Navigation returns to the Homefeed screen, clearing the back stack.
+ *
+ * When authentication fails or is canceled:
+ * - Appropriate log messages and user-facing messages are displayed.
+ *
+ * @param navController The [NavHostController] used for app navigation.
+ * @param showMessage A lambda used to display toast or snackbar messages to the user.
+ * @param profileViewModel The [ProfileViewModel] used to sync user data post sign-in.
+ *
+ * @return A lambda function that launches the Firebase sign-in flow when invoked.
+ */
 @Composable
 fun rememberSignInLauncher(
     navController: NavHostController,
@@ -60,7 +82,7 @@ fun rememberSignInLauncher(
     val signInIntent = remember(providers) {
         AuthUI.getInstance()
             .createSignInIntentBuilder()
-            .setTheme(R.style.Base_Theme_HexagonalGames)
+            .setTheme(R.style.Theme_HexagonalGames_Login)
             .setAvailableProviders(providers)
             .build()
     }

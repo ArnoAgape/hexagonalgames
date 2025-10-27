@@ -18,7 +18,6 @@ import io.mockk.mockk
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -135,11 +134,11 @@ class AddCommentViewModelTest {
 
         // Act
         viewModel.addComment("post123")
-        advanceUntilIdle() // exécute tout ce qui est dans viewModelScope.launch
+        advanceUntilIdle()
 
         // Assert
         val state = viewModel.uiState.value
-        println(">>> uiState = $state")
+
         assertTrue(state is AddCommentUiState.Error.Generic)
         coVerify { commentRepo.addComment("post123", any()) }
     }

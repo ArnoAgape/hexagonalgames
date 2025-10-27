@@ -9,7 +9,22 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * Fake API simulant la logique de FirebaseUserApi pour les tests ou le mode hors-ligne.
+ * A fake implementation of [UserApi] that simulates the behavior of [FirebaseUserApi]
+ * for offline mode, previews, or unit testing.
+ *
+ * This object maintains a list of mock [User] instances and provides reactive
+ * [StateFlow]s to observe the current user and authentication state.
+ *
+ * It can be used to test user-related logic without requiring a network connection
+ * or interaction with Firebase services.
+ *
+ * - `users`: Contains a mutable list of fake users available for testing.
+ * - `_currentUser`: Holds the currently "signed-in" fake user.
+ * - `_isUserSignedIn`: Represents whether a fake user is currently signed in.
+ *
+ * The API methods mimic real-world operations such as ensuring the user exists
+ * in the data source, signing out, or deleting the current user, while logging
+ * corresponding actions for debugging purposes.
  */
 object UserFakeApi : UserApi {
 
@@ -68,11 +83,5 @@ object UserFakeApi : UserApi {
         } catch (e: Exception) {
             Result.failure(e)
         }
-    }
-
-    suspend fun signInFakeUser(userId: String) {
-        val user = users.find { it.id == userId }
-        delay(300)
-        _currentUser.value = user
     }
 }
