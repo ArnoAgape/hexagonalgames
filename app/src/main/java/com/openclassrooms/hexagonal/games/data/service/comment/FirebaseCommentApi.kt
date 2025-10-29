@@ -2,6 +2,7 @@ package com.openclassrooms.hexagonal.games.data.service.comment
 
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.dataObjects
 import com.openclassrooms.hexagonal.games.domain.model.Comment
 import com.openclassrooms.hexagonal.games.ui.utils.NetworkUtils
 import jakarta.inject.Inject
@@ -59,20 +60,11 @@ class FirebaseCommentApi @Inject constructor(
      * @param postId The unique identifier of the Post.
      * @return A [Flow] emitting ordered lists of [Comment]s.
      */
-    override fun observeComments(postId: String): Flow<List<Comment>> = callbackFlow {
-        val listener = db.collection("posts")
+    override fun observeComments(postId: String): Flow<List<Comment>> {
+        return db.collection("posts")
             .document(postId)
             .collection("comments")
             .orderBy("timestamp", Query.Direction.ASCENDING)
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    close(e)
-                    return@addSnapshotListener
-                }
-                val comments = snapshot?.toObjects(Comment::class.java).orEmpty()
-                trySend(comments)
-            }
-
-        awaitClose { listener.remove() }
+            .dataObjects()
     }
 }

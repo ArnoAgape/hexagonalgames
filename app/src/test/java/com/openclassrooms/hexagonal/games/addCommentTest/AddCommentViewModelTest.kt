@@ -43,7 +43,7 @@ class AddCommentViewModelTest {
         userRepo = mockk()
         fakeNetwork = mockk()
 
-        coEvery { userRepo.getCurrentUser() } returns TestUtils.fakeUser("1")
+        coEvery { userRepo.getCurrentUser() } returns TestUtils.fakeUser(id = "1")
 
         viewModel = AddCommentViewModel(commentRepo, userRepo, fakeNetwork)
     }
@@ -60,7 +60,7 @@ class AddCommentViewModelTest {
 
     @Test
     fun `isCommentValid emits true when comment is not blank`() = runTest {
-        viewModel.onAction(FormEvent.CommentChanged("test"))
+        viewModel.onAction(FormEvent.CommentChanged(comment = "test"))
 
         viewModel.isCommentValid.test {
             assertTrue(awaitItem())
@@ -79,8 +79,8 @@ class AddCommentViewModelTest {
     fun `onSaveClicked shows error toast when comment is empty`() = runTest {
         viewModel.eventsFlow.test {
 
-            viewModel.onAction(FormEvent.CommentChanged(""))
-            viewModel.onSaveClicked("0")
+            viewModel.onAction(FormEvent.CommentChanged(comment = ""))
+            viewModel.onSaveClicked(postId = "0")
 
             val event = awaitItem()
             assertEquals(R.string.error_comment, (event as Event.ShowToast).message)
@@ -94,7 +94,7 @@ class AddCommentViewModelTest {
         coEvery { commentRepo.addComment(any(), any()) } just Runs
         coEvery { fakeNetwork.isNetworkAvailable() } returns true
 
-        viewModel.onAction(FormEvent.CommentChanged("I'm lovin' it!"))
+        viewModel.onAction(FormEvent.CommentChanged(comment = "I'm lovin' it!"))
 
         // Act
         viewModel.addComment("1")

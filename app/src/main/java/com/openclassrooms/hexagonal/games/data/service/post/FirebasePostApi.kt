@@ -5,15 +5,16 @@ import android.util.Log
 import androidx.core.net.toUri
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.dataObjects
 import com.google.firebase.storage.FirebaseStorage
 import com.openclassrooms.hexagonal.games.domain.model.Post
 import com.openclassrooms.hexagonal.games.ui.utils.NetworkUtils
 import jakarta.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -43,19 +44,10 @@ class FirebasePostApi @Inject constructor(
      *
      * @return A [Flow] emitting lists of [Post]s sorted by newest first.
      */
-    override fun getPostsOrderByCreationDateDesc(): Flow<List<Post>> = callbackFlow {
-        val listener = postsCollection
+    override fun getPostsOrderByCreationDateDesc(): Flow<List<Post>> {
+        return postsCollection
             .orderBy("timestamp", Query.Direction.DESCENDING)
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    close(e)
-                    return@addSnapshotListener
-                }
-                val posts = snapshot?.toObjects(Post::class.java).orEmpty()
-                trySend(posts)
-            }
-
-        awaitClose { listener.remove() }
+            .dataObjects()
     }
 
     /**
@@ -94,20 +86,13 @@ class FirebasePostApi @Inject constructor(
      *
      * @return A [Flow] emitting the latest [Post] whenever it changes.
      */
-    override fun getCurrentPost(): Flow<Post> = callbackFlow {
-        val listener = postsCollection
+    override fun getCurrentPost(): Flow<Post> =
+        postsCollection
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .limit(1)
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    close(e)
-                    return@addSnapshotListener
-                }
-                snapshot?.toObjects(Post::class.java)?.firstOrNull()?.let { trySend(it) }
-            }
+            .dataObjects<Post>()
+            .mapNotNull { posts -> posts.firstOrNull() }
 
-        awaitClose { listener.remove() }
-    }
 
     /**
      * Observes a specific [Post] by its unique identifier.
@@ -115,18 +100,12 @@ class FirebasePostApi @Inject constructor(
      * @param postId The ID of the post to observe.
      * @return A [Flow] emitting the matching [Post] or `null` if not found.
      */
-    override fun getPostById(postId: String): Flow<Post?> = callbackFlow {
-        val listener = postsCollection.document(postId)
-            .addSnapshotListener { snapshot, e ->
-                if (e != null) {
-                    close(e)
-                    return@addSnapshotListener
-                }
-                val post = snapshot?.toObject(Post::class.java)
-                trySend(post)
-            }
-
-        awaitClose { listener.remove() }
+    override fun getPostById(postId: String): Flow<Post?> {
+        return postsCollection
+            .whereEqualTo("id", postId)
+            .limit(1)
+            .dataObjects<Post>()
+            .map { it.firstOrNull() }
     }
 
     /**
