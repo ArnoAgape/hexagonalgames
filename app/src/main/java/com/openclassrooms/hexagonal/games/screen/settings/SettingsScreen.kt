@@ -66,6 +66,7 @@ fun SettingsScreen(
     ) { contentPadding ->
         Settings(
             modifier = Modifier.padding(contentPadding),
+            notificationsEnabled = notificationsEnabled,
             onNotificationEnabledClicked = {
                 viewModel.toggleNotifications(!notificationsEnabled)
             }
@@ -77,6 +78,7 @@ fun SettingsScreen(
 @Composable
 private fun Settings(
     modifier: Modifier = Modifier,
+    notificationsEnabled: Boolean,
     onNotificationEnabledClicked: () -> Unit
 ) {
     val notificationsPermissionState = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -102,12 +104,18 @@ private fun Settings(
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     if (notificationsPermissionState?.status?.isGranted == false) {
                         notificationsPermissionState.launchPermissionRequest()
+                        return@Button
                     }
                 }
                 onNotificationEnabledClicked()
             }
         ) {
-            Text(text = stringResource(id = R.string.notification_enable))
+            if (notificationsEnabled) {
+                Text(text = stringResource(id = R.string.notification_disable))
+            }
+            else {
+                Text(text = stringResource(id = R.string.notification_enable))
+            }
         }
     }
 }
@@ -117,7 +125,8 @@ private fun Settings(
 private fun SettingsPreview() {
     HexagonalGamesTheme {
         Settings(
-            onNotificationEnabledClicked = { }
+            onNotificationEnabledClicked = { },
+            notificationsEnabled = false
         )
     }
 }
