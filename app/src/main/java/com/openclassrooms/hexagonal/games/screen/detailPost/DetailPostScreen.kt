@@ -212,8 +212,6 @@ fun DetailScreen(
         }
     }
 }
-
-
 @Composable
 private fun PostContent(
     modifier: Modifier,

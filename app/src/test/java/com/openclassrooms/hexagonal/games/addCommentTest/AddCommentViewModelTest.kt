@@ -48,7 +48,6 @@ class AddCommentViewModelTest {
         viewModel = AddCommentViewModel(commentRepo, userRepo, fakeNetwork)
     }
 
-
     @Test
     fun `isCommentValid emits false when comment is blank`() = runTest {
 
