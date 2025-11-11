@@ -14,7 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -80,19 +79,6 @@ class FirebasePostApi @Inject constructor(
             throw e
         }
     }
-
-    /**
-     * Observes the most recently created [Post].
-     *
-     * @return A [Flow] emitting the latest [Post] whenever it changes.
-     */
-    override fun getCurrentPost(): Flow<Post> =
-        postsCollection
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .limit(1)
-            .dataObjects<Post>()
-            .mapNotNull { posts -> posts.firstOrNull() }
-
 
     /**
      * Observes a specific [Post] by its unique identifier.

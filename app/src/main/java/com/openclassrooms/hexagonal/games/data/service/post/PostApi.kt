@@ -26,13 +26,6 @@ interface PostApi {
   suspend fun addPost(post: Post)
 
   /**
-   * Observes the currently selected or active [Post].
-   *
-   * @return A [Flow] emitting the current [Post].
-   */
-  fun getCurrentPost(): Flow<Post>
-
-  /**
    * Retrieves a [Flow] emitting a [Post] matching the given [postId].
    *
    * @param postId The unique identifier of the post to retrieve.

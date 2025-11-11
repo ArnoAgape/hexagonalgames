@@ -124,7 +124,7 @@ class AddCommentViewModelTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `addComment emits Generic error when repository throws`() = runTest(mainDispatcherRule.testDispatcher) {
+    fun `addComment emits Generic error when repository throws`() = runTest {
         // Arrange
         coEvery { fakeNetwork.isNetworkAvailable() } returns true
         coEvery { commentRepo.addComment(any(), any()) } throws Exception("DB error")
