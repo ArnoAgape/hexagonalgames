@@ -115,6 +115,13 @@ class AddPostViewModel @Inject constructor(
                 return@launch
             }
 
+            val currentUser = _user.value
+            if (currentUser == null) {
+                _uiState.value = AddPostUiState.Error.NoAccount()
+                _events.trySend(Event.ShowToast(R.string.error_no_account_post))
+                return@launch
+            }
+
             _uiState.value = AddPostUiState.Loading
 
             try {
